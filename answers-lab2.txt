@@ -1,1 +1,7 @@
-Fill this in
+Question 1:
+
+mystery_t should be uintptr_t as it points to a virtual address.
+We know that it points to a virtual address because it is set to the
+value of the pointer "value" which is dereferenced in the third line.
+That would make no sense if it were a physical address, since all address
+translation starts with virtual addresses.

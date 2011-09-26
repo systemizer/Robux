@@ -81,7 +81,7 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 	do
 	{
 		eip = (int*)ebp[1];  // Get return address (next int after ebp)
-		for(i=0; i<5; i++)
+		for (i=0; i<5; i++)
 		{
 			// Get each arg
 			// args are after old ebp and eip,
@@ -95,7 +95,7 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 
 
 		struct Eipdebuginfo info;
-		if(debuginfo_eip((int)eip, &info) == 0)
+		if (debuginfo_eip((int)eip, &info) == 0)
 		{
 			// Make buffer to save name, and copy the right number of chars
 			char name[info.eip_fn_namelen+1];
@@ -112,7 +112,7 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 		// Go to next stack frame, stop if we reach NULL
 		ebp = (int*)(*ebp);
 		
-	} while(ebp != 0);
+	} while (ebp != 0);
 
 	return 0;
 }

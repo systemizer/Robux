@@ -6,6 +6,7 @@
 # error "This is a JOS kernel header; user programs should not #include it"
 #endif
 
+#include <inc/x86.h>
 #include <inc/memlayout.h>
 #include <inc/assert.h>
 
@@ -83,5 +84,39 @@ page2kva(struct Page *pp)
 }
 
 pte_t *pgdir_walk(pde_t *pgdir, const void *va, int create);
+
+
+#define CPUID_FLAG_PSE 0x8
+
+// Call CPUID with EAX=1 to get feature list for processor
+// and use that list to determine if the CPU supports PSE.
+// The values after calling CPUID with EAX=1 are:
+// EAX : Version Info
+// EBX/ECX : Reserved (assuming clobbered)
+// EDX : Feature info (this is what we want)
+// 
+// Bit 3 is PSE
+static inline int
+cpu_has_pse(void)
+{
+	uint32_t features;
+	asm("movl $1, %%eax\n\t"
+		  "cpuid\n\t"
+			"movl %%edx, %0"
+			: "=r"(features)
+			:
+			:"%eax", "%ebx", "%ecx", "%edx");
+
+	return features & CPUID_FLAG_PSE;
+}
+
+static inline void
+cpu_activate_pse(void)
+{
+	if (!cpu_has_pse())
+		panic("Trying to activate PSE, but CPU does not support it\n");
+
+	lcr4(rcr4() | CR4_PSE);
+}
 
 #endif /* !JOS_KERN_PMAP_H */

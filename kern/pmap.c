@@ -64,6 +64,7 @@ static physaddr_t check_va2pa(pde_t *pgdir, uintptr_t va);
 static void check_page(void);
 static void check_page_installed_pgdir(void);
 static void boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm);
+static void boot_map_region_pse(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm);
 
 // This simple physical memory allocator is used only while JOS is setting
 // up its virtual memory system.  page_alloc() is the real allocator.
@@ -83,7 +84,7 @@ boot_alloc(uint32_t n)
 	static char *nextfree;	// virtual address of next byte of free memory
 	char *result;
 
-	if(n == 0)
+	if (n == 0)
 		return nextfree;
 
 	// Initialize nextfree if this is the first time.
@@ -178,8 +179,7 @@ mem_init(void)
 	//    - pages itself -- kernel RW, user NONE
 	boot_map_region(kern_pgdir, 
 									UPAGES, 
-									ROUNDUP(npages*sizeof(struct Page), 
-									PGSIZE),
+									ROUNDUP(npages*sizeof(struct Page), PGSIZE),
 									PADDR(pages),
 									PTE_U);
 
@@ -195,13 +195,19 @@ mem_init(void)
 	//       overwrite memory.  Known as a "guard page".
 	//     Permissions: kernel RW, user NONE
 	uint32_t i;
-	for(i = 0; i < KSTKSIZE; i+=PGSIZE)
+	for (i = 0; i < KSTKSIZE; i+=PGSIZE)
 	{
 		struct Page *page = pa2page(PADDR(bootstack)+i);
-		if(!page)
+		if (!page)
 			panic("Out of memory for kernel stack\n");
-		if(page_insert(kern_pgdir, page, (void*)(KSTACKTOP-KSTKSIZE + i), PTE_W) < 0)
+		if (page_insert(kern_pgdir, page, (void*)(KSTACKTOP-KSTKSIZE + i), PTE_W) < 0)
 			panic("Failed to allocate page table\n");
+	}
+	// Remove mappings for guard pages if they exist
+	void *va;
+	for (va = (void*)KSTACKTOP-PTSIZE; va < (void*)KSTACKTOP-KSTKSIZE; va += PGSIZE)
+	{
+		page_remove(kern_pgdir, va);
 	}
 
 	//////////////////////////////////////////////////////////////////////
@@ -211,11 +217,29 @@ mem_init(void)
 	// We might not have 2^32 - KERNBASE bytes of physical memory, but
 	// we just set up the mapping anyway.
 	// Permissions: kernel RW, user NONE
-	boot_map_region(kern_pgdir, 
-									KERNBASE, 
-									(0xFFFFF000 - KERNBASE ),
-									0x00000000,
-									PTE_W);
+	
+	// CHALLENGE: Detect if the processor has PSE. If not, map 4KiB pages.
+	// If so, map 4MiB pages.
+	if (!cpu_has_pse())
+	{
+		// No PSE -> Map regular
+		boot_map_region(kern_pgdir, 
+										KERNBASE, 
+										(0xFFFFF000 - KERNBASE ),
+										0x00000000,
+										PTE_W);
+	}
+	else
+	{
+		cpu_activate_pse();
+
+		// PSE -> Map 4MiB pages
+		boot_map_region_pse(kern_pgdir, 
+										KERNBASE, 
+										(0xFFFFF000 - KERNBASE ),
+										0x00000000,
+										PTE_W);
+	}
 
 	// Check that the initial page directory has been set up correctly.
 	check_kern_pgdir();
@@ -288,7 +312,7 @@ page_init(void)
 		// This works because the kernel is loaded at EXTPHYSMEM (0x100000)
 		// and it uses everything up to the end of the "pages" array which
 		// was appended onto the end of its bss section.
-		if(i == 0 ||
+		if (i == 0 ||
 			 (i >= IOPHYSMEM/PGSIZE && i < EXTPHYSMEM/PGSIZE) ||
 			 (i >= EXTPHYSMEM/PGSIZE && (i < PADDR(boot_alloc(0))/PGSIZE)))
 		{
@@ -434,16 +458,34 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 	uintptr_t virt;
 	physaddr_t phys;
 
-	for(virt=va, phys=pa; virt < va+size; virt += PGSIZE, phys+= PGSIZE)
+	for (virt=va, phys=pa; virt < va+size; virt += PGSIZE, phys+= PGSIZE)
 	{
-		//cprintf("Mapping VA 0x%x to PA 0x%x [0x%x, 0x%x, 0x%x]\n", virt, phys, va, pa, size);
 
 		pte_t *pte = pgdir_walk(pgdir, (void*)virt, 1);
-		if(!pte)
+		if (!pte)
 			panic("Failed to allocate page table");
 		*pte = (phys & (~0xFFF)) | perm | PTE_P;
 	}
 }
+
+// Map [va, va+size) of virtual address space to physical [pa, pa+size)
+// similar to boot_map_region. Size is still a multiple of PGSIZE.
+// To simplify implementation, this loops over all 4KiB pages that would be 
+// allocated and keeps reinitializing the PDE for the containing 4MiB page.
+// Use permission bits perm | PTE_PS | PTE_P
+static void
+boot_map_region_pse(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
+{
+	uintptr_t virt;
+	physaddr_t phys;
+
+	for (virt=va, phys=pa; virt < va+size; virt += PGSIZE, phys+= PGSIZE)
+	{
+		pde_t *entry = &pgdir[PDX(virt)];
+		*entry = (phys & 0xFFC00000) | perm | PTE_PS | PTE_P;
+	}
+}
+
 
 //
 // Map the physical page 'pp' at virtual address 'va'.
@@ -476,6 +518,9 @@ page_insert(pde_t *pgdir, struct Page *pp, void *va, int perm)
 	if (!pte)
 		return -E_NO_MEM;
 
+	// Increment reference of physical page before removing so
+	// that the page is not freed if it is being remapped back
+	// to the same unique virtual address as before
 	pp->pp_ref += 1;
 	page_remove(pgdir, va);
 
@@ -769,6 +814,11 @@ check_va2pa(pde_t *pgdir, uintptr_t va)
 	pgdir = &pgdir[PDX(va)];
 	if (!(*pgdir & PTE_P))
 		return ~0;
+
+	// Added for challenge: support 4MB pages
+	if (*pgdir & PTE_PS)
+		return (*pgdir & 0xFFC00000) + (va & 0x003FF000);
+
 	p = (pte_t*) KADDR(PTE_ADDR(*pgdir));
 	if (!(p[PTX(va)] & PTE_P))
 		return ~0;
@@ -903,7 +953,7 @@ check_page(void)
 	page_free(pp0);
 	pgdir_walk(kern_pgdir, 0x0, 1);
 	ptep = (pte_t *) page2kva(pp0);
-	for(i=0; i<NPTENTRIES; i++)
+	for (i=0; i<NPTENTRIES; i++)
 		assert((ptep[i] & PTE_P) == 0);
 	kern_pgdir[0] = 0;
 	pp0->pp_ref = 0;

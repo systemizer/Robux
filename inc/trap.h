@@ -73,6 +73,40 @@ struct Trapframe {
 } __attribute__((packed));
 
 
+void trap0();
+void trap1();
+void trap2();
+void trap3();
+void trap4();
+void trap5();
+void trap6();
+void trap7();
+void trap8();
+void trap9();
+void trap10();
+void trap11();
+void trap12();
+void trap13();
+void trap14();
+void trap15();
+void trap16();
+void trap17();
+void trap18();
+void trap19();
+void trap20();
+void trap21();
+void trap22();
+void trap23();
+void trap24();
+void trap25();
+void trap26();
+void trap27();
+void trap28();
+void trap29();
+void trap30();
+void trap31();
+
+
 #endif /* !__ASSEMBLER__ */
 
 #endif /* !JOS_INC_TRAP_H */

@@ -14,3 +14,17 @@ Calling int $14 is disallowed at CPL 3 since the DPL for gate 14 is 0.
 This generates a general protection fault, which uses gate 13.
 If the kernel allowed int $14 to work, then user programs could trigger
 arbitrary page faults and potentially destabilize the system.
+
+Problem 3:
+The gate needs to be set up with a DPL of 3 so that it can be called from
+user mode. The processor generates a GP fault when breakpoint is called
+without this change because it sees a user-mode program (with CPL=3) trying
+to trigger an interrupt with DPL=0. Changing the DPL to 3 fixes this problem.
+
+Problem 4:
+The point of these mechanisms is to prevent user-mode programs from triggering
+privileged interrupts as a protection from both incorrect and malicious 
+programs. An incorrect or malicious program could trigger interrupts to 
+destabilize the system or send malicious data to the kernel. The TSS
+also helps with this by ensuring that user stacks with potentially
+incorrect or malicious data are not used for serving interrupts.

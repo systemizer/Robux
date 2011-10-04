@@ -68,7 +68,7 @@ trap_init(void)
   SETGATE(idt[0], 0, GD_KT, trap0, 0)
   SETGATE(idt[1], 0, GD_KT, trap1, 0)
   SETGATE(idt[2], 0, GD_KT, trap2, 0)
-  SETGATE(idt[3], 1, GD_KT, trap3, 0)
+  SETGATE(idt[3], 1, GD_KT, trap3, 3)
   SETGATE(idt[4], 1, GD_KT, trap4, 0)
   SETGATE(idt[5], 0, GD_KT, trap5, 0)
   SETGATE(idt[6], 0, GD_KT, trap6, 0)
@@ -97,6 +97,18 @@ trap_init(void)
   SETGATE(idt[29], 1, GD_KT, trap29, 0)
   SETGATE(idt[30], 1, GD_KT, trap30, 0)
   SETGATE(idt[31], 1, GD_KT, trap31, 0)
+  
+	// Set up syscall gate
+	SETGATE(idt[T_SYSCALL], 1, GD_KT, trap_sysc, 3)
+
+	// Set up syscall MSR if the processor supports sysenter
+	if (cpu_get_features() & CPUID_FLAG_SEP)
+	{
+		wrmsr(SYSENTER_CS, GD_KT, 0);
+		wrmsr(SYSENTER_ESP, KSTACKTOP, 0);
+		wrmsr(SYSENTER_EIP, sysenter_handler, 0);
+	}
+
 	
 	// Per-CPU setup 
 	trap_init_percpu();
@@ -176,6 +188,22 @@ trap_dispatch(struct Trapframe *tf)
 	if (tf->tf_trapno == T_PGFLT)
 	{
 		page_fault_handler(tf);
+		return;
+	}
+	else if (tf->tf_trapno == T_BRKPT)
+	{
+		monitor(tf);
+		return;
+	}
+	else if (tf->tf_trapno == T_SYSCALL)
+	{
+		tf->tf_regs.reg_eax = syscall(tf->tf_regs.reg_eax, 
+				    											tf->tf_regs.reg_edx, 
+																	tf->tf_regs.reg_ecx, 
+																	tf->tf_regs.reg_ebx, 
+																	tf->tf_regs.reg_edi, 
+																	tf->tf_regs.reg_esi);
+		return;
 	}
 
 	// Unexpected trap: The user process or the kernel has a bug.
@@ -237,6 +265,11 @@ page_fault_handler(struct Trapframe *tf)
 	// Handle kernel-mode page faults.
 
 	// LAB 3: Your code here.
+	// Fault if lower 3 bits (CPL) are 0
+	if(!(tf->tf_cs & 3))
+	{
+		panic("kernel fault va %08x ip %08x\n", fault_va, tf->tf_eip);
+	}
 
 	// We've already handled kernel-mode exceptions, so if we get here,
 	// the page fault happened in user mode.

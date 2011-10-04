@@ -81,6 +81,13 @@ TRAPHANDLER_NOEC(trap29,29)
 TRAPHANDLER_NOEC(trap30,30)
 TRAPHANDLER_NOEC(trap31,31)
 
+TRAPHANDLER_NOEC(trap_sysc,T_SYSCALL)
+
+.globl sysenter_handler
+sysenter_handler:
+int $3
+sysexit
+
 
 /*
  * Lab 3: Your code here for _alltraps

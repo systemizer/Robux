@@ -290,10 +290,13 @@ region_alloc(struct Env *e, void *va, size_t len)
 	// LAB 3: Your code here.
 	// (But only if you need it for load_icode.)
 	
+	// Find the virtual address of starting page
 	void *start_va = ROUNDDOWN(va, PGSIZE);
-	size_t round_len = ROUNDUP(len, PGSIZE);
 	void *cur_va = start_va;
-	for(; cur_va < start_va+round_len; cur_va += PGSIZE)
+
+	// Alloc pages from [start_va, ROUNDUP(va+len, PGSIZE))
+	// since those pages are what is required
+	for(; cur_va < ROUNDUP(va+len, PGSIZE); cur_va += PGSIZE)
 	{
 		struct Page *p = page_alloc(0);
 		page_insert(e->env_pgdir, p, cur_va, PTE_U | PTE_W);
@@ -370,7 +373,11 @@ load_icode(struct Env *e, uint8_t *binary, size_t size)
 	ph = (struct Proghdr *) (binary + prog->e_phoff);
 	eph = ph + prog->e_phnum;
 
-	// Iterate over each and load it
+	// We want to use environment pgdir so that the pages we
+	// allocate are mapped to be copid to
+	lcr3((uint32_t) PADDR(e->env_pgdir));
+
+	// Iterate over each program header and load it
 	for(; ph < eph; ph++)
 	{
 		// Skip non PROG_LOAD segments
@@ -382,11 +389,12 @@ load_icode(struct Env *e, uint8_t *binary, size_t size)
 		
 		region_alloc(e, (void*)ph->p_va, ph->p_memsz); 
 
-		lcr3((uint32_t) PADDR(e->env_pgdir));
 		memmove((void*)ph->p_va, binary+ph->p_offset, ph->p_filesz);
 		memset((void*)ph->p_va+ph->p_filesz, 0x00, ph->p_memsz-ph->p_filesz);
-		lcr3((uint32_t) PADDR(kern_pgdir));
 	}
+
+	// Go back to the kernel's pgdir
+	lcr3((uint32_t) PADDR(kern_pgdir));
 
 
 	// Now map one page for the program's initial stack

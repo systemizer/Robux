@@ -629,6 +629,9 @@ tlb_invalidate(pde_t *pgdir, void *va)
 
 static uintptr_t user_mem_check_addr;
 
+
+#define ADDRMAX(a, b) ((uint32_t)a < (uint32_t)b)?(uint32_t)b:(uint32_t)a
+
 //
 // Check that an environment is allowed to access the range of memory
 // [va, va+len) with permissions 'perm | PTE_P'.
@@ -651,6 +654,49 @@ int
 user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 {
 	// LAB 3: Your code here.
+	// Get the start page and the environment's pagedir
+	uint32_t current = ROUNDDOWN((uint32_t)va, PGSIZE);
+	pde_t *pagedir = env->env_pgdir;
+
+	// Add present to required permissions
+	perm |= PTE_P; 
+
+	// Loop over all relevant pages
+	for(; current < ROUNDUP((uint32_t)va + len, PGSIZE); current += PGSIZE)
+	{
+
+		// Ensure that the current page is below ULIM
+		if (current >= ULIM)
+		{
+			// We need the MAX to set the check addr to print
+			// the smallest address that is part of the range being
+			// considered that is invalid.
+			user_mem_check_addr = ADDRMAX(va, current);
+			return -E_FAULT;
+		}
+
+		pde_t pde = pagedir[PDX(current)];
+		
+		// Check that the corresponding PDE has the given perms
+		if ((pde & perm) != perm)
+		{
+			user_mem_check_addr = ADDRMAX(va, current);
+			return -E_FAULT;
+		}
+
+		// If this is not a 4MB page,
+		// check that the corresponding PTE has the given perms
+		if (!(pde & PTE_PS))
+		{
+			pte_t pte = ((pte_t *)KADDR(PTE_ADDR(pde)))[PTX(current)];
+
+			if ((pte & perm) != perm)
+			{
+				user_mem_check_addr = ADDRMAX(va, current);
+				return -E_FAULT;
+			}
+		}
+	}
 
 	return 0;
 }

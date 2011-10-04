@@ -2,11 +2,27 @@
 
 #include <inc/syscall.h>
 #include <inc/lib.h>
+#include <inc/x86.h>
 
 static inline int32_t
 syscall(int num, int check, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
 {
 	int32_t ret;
+
+	// Check if we have SYSENTER/SYSEXIT instructions
+	if(cpu_get_features() & CPUID_FLAG_SEP)
+	{
+		// Check if we want to use SYSENTER for this specific
+		// syscall number
+		switch(num)
+		{
+			case SYS_getenvid:
+			//	asm volatile ("sysenter");
+
+			default:
+				break;
+		}
+	}
 
 	// Generic system call: pass system call number in AX,
 	// up to five parameters in DX, CX, BX, DI, SI.

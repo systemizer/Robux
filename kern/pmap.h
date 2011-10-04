@@ -90,8 +90,6 @@ page2kva(struct Page *pp)
 pte_t *pgdir_walk(pde_t *pgdir, const void *va, int create);
 
 
-#define CPUID_FLAG_PSE 0x8
-
 // Call CPUID with EAX=1 to get feature list for processor
 // and use that list to determine if the CPU supports PSE.
 // The values after calling CPUID with EAX=1 are:

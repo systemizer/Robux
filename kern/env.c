@@ -201,7 +201,7 @@ env_setup_vm(struct Env *e)
 	
 	// Simply copy over the PDEs from the kern_pgdir to the env
 	// pgdir. They can share.
-	for(i=PDX(UTOP); i<=PDX(0xfffff000); i++)
+	for (i=PDX(UTOP); i<=PDX(0xfffff000); i++)
 	{
 		((pde_t*)e->env_pgdir)[i] = kern_pgdir[i];
 	}
@@ -296,7 +296,7 @@ region_alloc(struct Env *e, void *va, size_t len)
 
 	// Alloc pages from [start_va, ROUNDUP(va+len, PGSIZE))
 	// since those pages are what is required
-	for(; cur_va < ROUNDUP(va+len, PGSIZE); cur_va += PGSIZE)
+	for (; cur_va < ROUNDUP(va+len, PGSIZE); cur_va += PGSIZE)
 	{
 		struct Page *p = page_alloc(0);
 		page_insert(e->env_pgdir, p, cur_va, PTE_U | PTE_W);
@@ -366,7 +366,7 @@ load_icode(struct Env *e, uint8_t *binary, size_t size)
 	struct Proghdr *ph, *eph;
 
 	// Check magic
-	if(prog->e_magic != ELF_MAGIC)
+	if (prog->e_magic != ELF_MAGIC)
 		panic("Invalid ELF header\n");
 
 	// Get beginning and end of Proghdr array
@@ -378,10 +378,10 @@ load_icode(struct Env *e, uint8_t *binary, size_t size)
 	lcr3((uint32_t) PADDR(e->env_pgdir));
 
 	// Iterate over each program header and load it
-	for(; ph < eph; ph++)
+	for (; ph < eph; ph++)
 	{
 		// Skip non PROG_LOAD segments
-		if(ph->p_type != ELF_PROG_LOAD)
+		if (ph->p_type != ELF_PROG_LOAD)
 			continue;
 
 		// Do something with flags to set perm,
@@ -543,7 +543,7 @@ env_run(struct Env *e)
 	//	e->env_tf to sensible values.
 
 	// LAB 3: Your code here.
-	if(curenv != NULL)
+	if (curenv != NULL)
 		curenv->env_status = ENV_RUNNABLE;
 
 	curenv = e;

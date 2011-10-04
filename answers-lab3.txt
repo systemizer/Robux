@@ -28,3 +28,29 @@ programs. An incorrect or malicious program could trigger interrupts to
 destabilize the system or send malicious data to the kernel. The TSS
 also helps with this by ensuring that user stacks with potentially
 incorrect or malicious data are not used for serving interrupts.
+
+CHALLENGE:
+
+I did the sysenter/sysexit challenge. There were three main modifications
+that were required:
+
+First, trap_init was modified to initialize the MSR so that sysenter knows
+where to enter. It only does this, however, if the cpu has that feature
+according to cpuid feature flags.
+
+Second, syscall in lib/syscall.c was modified to check if we want to
+use sysenter rather than int $0x30. It first checks to see if the cpu
+has that feature before it attempts to use it. It then switches
+on the trap number to see if it prefers sysenter over int $0x30. This
+means that syscalls need to explicitly be set to use sysenter over the
+normal syscall trap. If the syscall is in that list, it then calls
+do_fast_call to do the call. do_fast_call uses inline assembly to
+move the arguments into registers along with information about how to 
+get back and then calls sysenter. This allows all each syscall that 
+supports it to call sysenter.
+
+Third, a new function in trapentry.S was created called sysenter_handler.
+This is the defined entry point in the MSR from before. This function
+simply pushes the arguments for syscall and calls that function. When 
+syscall returns, it sets up registers for the return and calls sysexit
+to go back to user-space with the return value in eax.

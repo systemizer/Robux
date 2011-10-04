@@ -83,9 +83,42 @@ TRAPHANDLER_NOEC(trap31,31)
 
 TRAPHANDLER_NOEC(trap_sysc,T_SYSCALL)
 
+/*
+	Data passed in is:
+	eax - syscall number
+	edx, ecx, ebx, edi - args 1-4
+	esi - return pc
+	ebp - return esp
+
+	This code is the kernel side of the sysenter challenge
+	Since the two values we need to feed back to sysexit,
+	the return pc and return esp, are in callee save registers,
+	they do not need to be saved.
+
+	I just push all arguments to syscall and call the
+	function.
+
+	When it returns, I load the stack and return pointers
+	in the correct locations and call sysexit.
+*/
 .globl sysenter_handler
 sysenter_handler:
-int $3
+
+pushl $0
+pushl %edi
+pushl %ebx
+pushl %ecx
+pushl %edx
+pushl %eax
+call syscall
+
+/* 
+	Get our stack pointer in ecx
+	and our return addr in edx
+*/
+movl %ebp, %ecx
+movl %esi, %edx
+
 sysexit
 
 

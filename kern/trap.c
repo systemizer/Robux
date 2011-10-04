@@ -102,6 +102,9 @@ trap_init(void)
 	SETGATE(idt[T_SYSCALL], 1, GD_KT, trap_sysc, 3)
 
 	// Set up syscall MSR if the processor supports sysenter
+	// This allows us to use sysenter to jump into
+	// the kernel function sysenter_handler with the
+	// normal kernel stack and kernel text segment
 	if (cpu_get_features() & CPUID_FLAG_SEP)
 	{
 		wrmsr(SYSENTER_CS, GD_KT, 0);
@@ -266,7 +269,7 @@ page_fault_handler(struct Trapframe *tf)
 
 	// LAB 3: Your code here.
 	// Fault if lower 3 bits (CPL) are 0
-	if(!(tf->tf_cs & 3))
+	if (!(tf->tf_cs & 3))
 	{
 		panic("kernel fault va %08x ip %08x\n", fault_va, tf->tf_eip);
 	}

@@ -662,7 +662,7 @@ user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 	perm |= PTE_P; 
 
 	// Loop over all relevant pages
-	for(; current < ROUNDUP((uint32_t)va + len, PGSIZE); current += PGSIZE)
+	for (; current < ROUNDUP((uint32_t)va + len, PGSIZE); current += PGSIZE)
 	{
 
 		// Ensure that the current page is below ULIM

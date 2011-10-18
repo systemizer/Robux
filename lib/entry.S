@@ -33,3 +33,6 @@ args_exist:
 	call libmain
 1:	jmp 1b
 
+
+.globl do_fast_syscall
+do_fast_syscall:

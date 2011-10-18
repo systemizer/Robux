@@ -42,15 +42,98 @@
 	pushl $(num);							\
 	jmp _alltraps
 
+
 .text
 
 /*
  * Lab 3: Your code here for generating entry points for the different traps.
  */
 
+TRAPHANDLER_NOEC(trap0,0)
+TRAPHANDLER_NOEC(trap1,1)
+TRAPHANDLER_NOEC(trap2,2)
+TRAPHANDLER_NOEC(trap3,3)
+TRAPHANDLER_NOEC(trap4,4)
+TRAPHANDLER_NOEC(trap5,5)
+TRAPHANDLER_NOEC(trap6,6)
+TRAPHANDLER_NOEC(trap7,7)
+TRAPHANDLER(trap8,8)
+TRAPHANDLER_NOEC(trap9,9)
+TRAPHANDLER(trap10,10)
+TRAPHANDLER(trap11,11)
+TRAPHANDLER(trap12,12)
+TRAPHANDLER(trap13,13)
+TRAPHANDLER(trap14,14)
+TRAPHANDLER(trap15,15)
+TRAPHANDLER_NOEC(trap16,16)
+TRAPHANDLER_NOEC(trap17,17)
+TRAPHANDLER_NOEC(trap18,18)
+TRAPHANDLER_NOEC(trap19,19)
+TRAPHANDLER_NOEC(trap20,20)
+TRAPHANDLER_NOEC(trap21,21)
+TRAPHANDLER_NOEC(trap22,22)
+TRAPHANDLER_NOEC(trap23,23)
+TRAPHANDLER_NOEC(trap24,24)
+TRAPHANDLER_NOEC(trap25,25)
+TRAPHANDLER_NOEC(trap26,26)
+TRAPHANDLER_NOEC(trap27,27)
+TRAPHANDLER_NOEC(trap28,28)
+TRAPHANDLER_NOEC(trap29,29)
+TRAPHANDLER_NOEC(trap30,30)
+TRAPHANDLER_NOEC(trap31,31)
+
+TRAPHANDLER_NOEC(trap_sysc,T_SYSCALL)
+
+/*
+	Data passed in is:
+	eax - syscall number
+	edx, ecx, ebx, edi - args 1-4
+	esi - return pc
+	ebp - return esp
+
+	This code is the kernel side of the sysenter challenge
+	Since the two values we need to feed back to sysexit,
+	the return pc and return esp, are in callee save registers,
+	they do not need to be saved.
+
+	I just push all arguments to syscall and call the
+	function.
+
+	When it returns, I load the stack and return pointers
+	in the correct locations and call sysexit.
+*/
+.globl sysenter_handler
+sysenter_handler:
+
+pushl $0
+pushl %edi
+pushl %ebx
+pushl %ecx
+pushl %edx
+pushl %eax
+call syscall
+
+/* 
+	Get our stack pointer in ecx
+	and our return addr in edx
+*/
+movl %ebp, %ecx
+movl %esi, %edx
+
+sysexit
 
 
 /*
  * Lab 3: Your code here for _alltraps
  */
+
+_alltraps:
+	pushl %ds
+	pushl %es
+	pushal
+	movl $GD_KD, %eax
+	movw %ax, %ds
+	movw %ax, %es
+	pushl %esp
+	call trap
 

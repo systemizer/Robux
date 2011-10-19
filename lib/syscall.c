@@ -50,11 +50,12 @@ syscall(int num, int check, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		// need all 5 params.
 		switch(num)
 		{
-			case SYS_getenvid:
 			case SYS_cgetc:
 			case SYS_cputs:
-			case SYS_env_destroy:
+			case SYS_getenvid:
 				return do_fast_call(num, a1, a2, a3, a4);
+			case SYS_yield:
+			case SYS_env_destroy:
 			default:
 				break;
 		}

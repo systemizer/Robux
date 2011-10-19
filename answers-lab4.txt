@@ -1,0 +1,20 @@
+Question 1: 
+The difference between mpentry.S and boot.S is that the
+code from boot.S is linked to run at a low physical address. mpentry.S
+is linked to run above KERNBASE, so it has high addresses. MPBOOTPHYS
+subtracts the address of the start symbol from the address being used
+to calculate the physical address from the high link address that it
+knows. If it were omitted, mpentry.S code would be using high addresses
+that are not yet valid, which would fail.
+
+Question 2: 
+Multiple CPUs may trap into the kernel at the same time
+without holding the lock. For instance, if CPU 1 were in trap() with the
+kernel lock held, CPU 0 may still trigger an interrupt. The interrupt
+handler is run on the kernel's stack before it could try to acquire the
+kernel lock. If both used the same kernel stack, CPU 0 and CPU 1 would
+be using the same stack at the same time which is an error.
+
+Question 3:
+The address relative to the top of the kernel stack for the CPU remains the same.
+Since it is on a kernel's stack in a fixed relative position it can still be read.

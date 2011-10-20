@@ -381,6 +381,7 @@ page_fault_handler(struct Trapframe *tf)
 		 	frame = (struct UTrapframe*)(UXSTACKTOP - sizeof(struct UTrapframe));
 		}
 
+
 		user_mem_assert(curenv,(void*)frame, UXSTACKTOP - (uint32_t)frame, PTE_W);
 
 		frame->utf_fault_va = fault_va;

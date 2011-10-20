@@ -259,7 +259,7 @@ sys_page_map(envid_t srcenvid, void *srcva,
 
 	if(!( (perm & PTE_P) &&
 			  (perm & PTE_U) &&
-			 !(perm & ~(PTE_P | PTE_U | PTE_AVAIL | PTE_W))))
+			 !(perm & ~(PTE_SYSCALL))))
 	{
 		return -E_INVAL;
 	}

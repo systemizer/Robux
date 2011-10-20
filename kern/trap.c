@@ -1,6 +1,8 @@
 #include <inc/mmu.h>
 #include <inc/x86.h>
 #include <inc/assert.h>
+#include <inc/trap.h>
+#include <inc/string.h>
 
 #include <kern/pmap.h>
 #include <kern/trap.h>
@@ -366,6 +368,33 @@ page_fault_handler(struct Trapframe *tf)
 	//   (the 'tf' variable points at 'curenv->env_tf').
 
 	// LAB 4: Your code here.
+	if(curenv->env_pgfault_upcall != NULL)
+	{
+		struct UTrapframe *frame;
+
+		if(ROUNDUP(tf->tf_esp, PGSIZE) == UXSTACKTOP)
+		{
+			frame = (struct UTrapframe*)(tf->tf_esp - sizeof(uint32_t) - sizeof(struct UTrapframe));
+		}
+		else
+		{
+		 	frame = (struct UTrapframe*)(UXSTACKTOP - sizeof(struct UTrapframe));
+		}
+
+		user_mem_assert(curenv,(void*)frame, UXSTACKTOP - (uint32_t)frame, PTE_W);
+
+		frame->utf_fault_va = fault_va;
+		frame->utf_err = tf->tf_err;
+		memmove(&frame->utf_regs, &tf->tf_regs, sizeof(struct PushRegs));
+		frame->utf_eip = tf->tf_eip;
+		frame->utf_eflags = tf->tf_eflags;
+		frame->utf_esp = tf->tf_esp;
+
+		tf->tf_eip = (uint32_t)curenv->env_pgfault_upcall;
+		tf->tf_esp = (uint32_t)frame;
+		env_run(curenv);
+		
+	}
 
 	// Destroy the environment that caused the fault.
 	cprintf("[%08x] user fault va %08x ip %08x\n",

@@ -1,4 +1,5 @@
 #include <inc/mmu.h>
+	// Jump over error code and VA
 #include <inc/memlayout.h>
 
 // Page fault upcall entrypoint.
@@ -65,18 +66,33 @@ _pgfault_upcall:
 	// ways as registers become unavailable as scratch space.
 	//
 	// LAB 4: Your code here.
+	// Put trap-time eip into eax and trap-time esp into ebx
+	movl 40(%esp), %eax
+	movl 48(%esp), %ebx
+	// Write old eip into space under old esp
+	movl %eax, -4(%ebx)
+
+	// Jump over error code and VA
+	addl $8, %esp
 
 	// Restore the trap-time registers.  After you do this, you
 	// can no longer modify any general-purpose registers.
 	// LAB 4: Your code here.
+	popal
 
 	// Restore eflags from the stack.  After you do this, you can
 	// no longer use arithmetic operations or anything else that
 	// modifies eflags.
 	// LAB 4: Your code here.
+	addl $4, %esp
+	popf
 
 	// Switch back to the adjusted trap-time stack.
 	// LAB 4: Your code here.
+	popl %esp
+	// Subtract 4 from esp without modifying flags
+	leal -4(%esp), %esp
 
 	// Return to re-execute the instruction that faulted.
 	// LAB 4: Your code here.
+	ret

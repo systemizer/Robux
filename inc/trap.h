@@ -119,6 +119,23 @@ void trap29(void);
 void trap30(void);
 void trap31(void);
 
+void trap32(void);
+void trap33(void);
+void trap34(void);
+void trap35(void);
+void trap36(void);
+void trap37(void);
+void trap38(void);
+void trap39(void);
+void trap40(void);
+void trap41(void);
+void trap42(void);
+void trap43(void);
+void trap44(void);
+void trap45(void);
+void trap46(void);
+void trap47(void);
+
 void trap_sysc(void);
 
 void sysenter_handler(void);

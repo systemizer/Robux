@@ -107,8 +107,25 @@ trap_init(void)
   SETGATE(idt[30], 1, GD_KT, trap30, 0)
   SETGATE(idt[31], 1, GD_KT, trap31, 0)
   
+	SETGATE(idt[32], 0, GD_KT, trap32, 0)
+	SETGATE(idt[33], 0, GD_KT, trap33, 0)
+	SETGATE(idt[34], 0, GD_KT, trap34, 0)
+	SETGATE(idt[35], 0, GD_KT, trap35, 0)
+	SETGATE(idt[36], 0, GD_KT, trap36, 0)
+	SETGATE(idt[37], 0, GD_KT, trap37, 0)
+	SETGATE(idt[38], 0, GD_KT, trap38, 0)
+	SETGATE(idt[39], 0, GD_KT, trap39, 0)
+	SETGATE(idt[40], 0, GD_KT, trap40, 0)
+	SETGATE(idt[41], 0, GD_KT, trap41, 0)
+	SETGATE(idt[42], 0, GD_KT, trap42, 0)
+	SETGATE(idt[43], 0, GD_KT, trap43, 0)
+	SETGATE(idt[44], 0, GD_KT, trap44, 0)
+	SETGATE(idt[45], 0, GD_KT, trap45, 0)
+	SETGATE(idt[46], 0, GD_KT, trap46, 0)
+	SETGATE(idt[47], 0, GD_KT, trap47, 0)
+  
 	// Set up syscall gate
-	SETGATE(idt[T_SYSCALL], 1, GD_KT, trap_sysc, 3)
+	SETGATE(idt[T_SYSCALL], 0, GD_KT, trap_sysc, 3)
 
 	
 
@@ -259,12 +276,18 @@ trap_dispatch(struct Trapframe *tf)
 	// Handle clock interrupts. Don't forget to acknowledge the
 	// interrupt using lapic_eoi() before calling the scheduler!
 	// LAB 4: Your code here.
+	if (tf->tf_trapno == IRQ_OFFSET + IRQ_TIMER)
+	{
+		lapic_eoi();
+		sched_yield();
+	}
 
 	// Unexpected trap: The user process or the kernel has a bug.
 	print_trapframe(tf);
 	if (tf->tf_cs == GD_KT)
 		panic("unhandled trap in kernel");
 	else {
+		cprintf("Killing env\n");
 		env_destroy(curenv);
 		return;
 	}
@@ -302,6 +325,16 @@ trap(struct Trapframe *tf)
 		tf = &curenv->env_tf;
 	}
 
+	// BUG:
+	// Our current environment may have been killed and freed by
+	// another processor.
+	// This is a hack to make user_spin work. This will fail if
+	// the environment is reused 
+	if(curenv && curenv->env_status == ENV_FREE)
+	{
+		sched_yield();
+	}
+
 	// Record that tf is the last real trapframe so
 	// print_trapframe can print some additional information.
 	last_tf = tf;
@@ -323,6 +356,7 @@ void
 page_fault_handler(struct Trapframe *tf)
 {
 	uint32_t fault_va;
+
 
 	// Read processor's CR2 register to find the faulting address
 	fault_va = rcr2();
@@ -380,7 +414,6 @@ page_fault_handler(struct Trapframe *tf)
 		{
 		 	frame = (struct UTrapframe*)(UXSTACKTOP - sizeof(struct UTrapframe));
 		}
-
 
 		user_mem_assert(curenv,(void*)frame, UXSTACKTOP - (uint32_t)frame, PTE_W);
 

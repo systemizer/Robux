@@ -90,6 +90,7 @@ sys_exofork(void)
 	// LAB 4: Your code here.
 	int ret;
 	struct Env *newEnv;
+	struct Env *thisEnv = curenv;
 	if ((ret = env_alloc(&newEnv, curenv->env_id)) < 0)
 		return ret;
 
@@ -182,7 +183,7 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 	//   allocated!
 
 	// LAB 4: Your code here.
-	if(!( (perm & PTE_P) &&
+	if (!( (perm & PTE_P) &&
 			  (perm & PTE_U) &&
 			 !(perm & ~(PTE_P | PTE_U | PTE_AVAIL | PTE_W))))
 	{
@@ -372,6 +373,11 @@ void syscall_cond_lock(uint32_t syscallno, int lock)
 	if (!(cpu_get_features() & CPUID_FLAG_SEP))
 		return;
 
+
+	// NO LOCKING, DISABLE SYSENTER FOR NOW
+	return;
+
+#if 0
 	switch(syscallno)
 	{
 		case SYS_cputs:
@@ -380,12 +386,13 @@ void syscall_cond_lock(uint32_t syscallno, int lock)
 			if(lock)
 			 lock_kernel();
 			else
-				unlock_kernel();
+			 unlock_kernel();
 		case SYS_env_destroy:
 		case SYS_yield:
 		default:
 			break;
 	}
+#endif
 }
 
 // Dispatches to the correct kernel function, passing the arguments.

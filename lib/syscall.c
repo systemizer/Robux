@@ -11,13 +11,15 @@ static int32_t do_fast_call(int num, uint32_t a1, uint32_t a2, uint32_t a3, uint
 	int32_t ret;
 
 	// This assembly code implemements the library side of the sysenter challenge.
-	// It first saves ebp, then moves all arguments into registers.
+	// It first saves ebp and flags, then moves all arguments into registers.
 	// It then load the return address into esi and the original stack into esp
 	// It then calls sysenter and begins running in sysenter_handler in 
 	// kern/trapentry.S
-	// When it returns it recovers its ebp value and moves the return value in
+	// When it returns it recovers its flags and ebp values and moves the return value in
+	// NOTE: Flags pushing was added as a hack and may need to be removed
 	// eax into the ret variable, which it returns.
 	asm volatile ("pushl %%ebp;"
+								"pushfl;"
 								"movl %1, %%eax;"
 			          "movl %2, %%edx;"
 			          "movl %3, %%ecx;"
@@ -27,6 +29,7 @@ static int32_t do_fast_call(int num, uint32_t a1, uint32_t a2, uint32_t a3, uint
 			          "movl %%esp, %%ebp;"
 								"sysenter;"
 								"ctn_syse: "
+								"popfl;"
 								"popl %%ebp;"
 								"movl %%eax, %0"
 								: "=m"(ret)
@@ -48,12 +51,15 @@ syscall(int num, int check, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		// then that syscall will fall through to the regular trap handler.
 		// We may do that by design for calls that modify environments or
 		// need all 5 params.
+		//
+		// NOTE: This has been disabled after lab4 because it does not
+		// save EFLAGS and this is causing problems.
 		switch(num)
 		{
+			//	return do_fast_call(num, a1, a2, a3, a4);
 			case SYS_cgetc:
 			case SYS_cputs:
 			case SYS_getenvid:
-				return do_fast_call(num, a1, a2, a3, a4);
 			case SYS_yield:
 			case SYS_env_destroy:
 			default:

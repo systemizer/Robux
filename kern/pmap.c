@@ -431,7 +431,6 @@ page_init(void)
 struct Page *
 page_alloc(int alloc_flags)
 {
-
 	// We have no more free pages
 	// if the free list is NULL
 	if (page_free_list == NULL)
@@ -727,6 +726,7 @@ static uintptr_t user_mem_check_addr;
 int
 user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 {
+
 	// LAB 3: Your code here.
 	// Get the start page and the environment's pagedir
 	uint32_t current = ROUNDDOWN((uint32_t)va, PGSIZE);

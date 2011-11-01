@@ -10,7 +10,7 @@ void
 sched_yield(void)
 {
 	struct Env *idle;
-	int i;
+	int i = 0;
 
 	// Implement simple round-robin scheduling.
 	//
@@ -30,7 +30,8 @@ sched_yield(void)
 
 	// LAB 4: Your code here.
 	
-	// Find index of current environment
+	// Find index of current environment if it exists
+	if(curenv != NULL)
 	for (i = 0; i < NENV; i++)
 	{
 		if(&envs[i] == curenv)
@@ -39,7 +40,7 @@ sched_yield(void)
 
 	// If curenv was not found, check env[0] and set i = 0 if
 	// it cannot be run
-	if(i == NENV)
+	if(i == NENV || curenv == NULL)
 	{
 		if(envs[0].env_type != ENV_TYPE_IDLE &&
 			 envs[0].env_status == ENV_RUNNABLE)
@@ -63,7 +64,9 @@ sched_yield(void)
 	}
 
 	// Choose the current env if it is runnable, otherwise fall through
-	if(curenv && curenv->env_status == ENV_RUNNABLE)
+	if(curenv && 
+			(curenv->env_status == ENV_RUNNABLE ||
+			(curenv->env_status == ENV_RUNNING)))
 	{
 		env_run(curenv);
 	}

@@ -340,7 +340,63 @@ static int
 sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 {
 	// LAB 4: Your code here.
-	panic("sys_ipc_try_send not implemented");
+	struct Env *env;
+	int r;
+	uint32_t srcint = (uint32_t)srcva;
+
+	// Make sure env exists
+	if ((r = envid2env(envid, &env, 0) < 0))
+		return r;
+	// Make sure env receiving
+	if (!env->env_ipc_recving)
+		return -E_IPC_NOT_RECV;
+
+	if (srcint < UTOP && (uint32_t)env->env_ipc_dstva < UTOP)
+	{
+		// Check if srcva < UTOP but not page-aligned
+		if(srcint % PGSIZE != 0)
+			return -E_INVAL;
+
+		// Check that permissions are appropriate
+		if (!( (perm & PTE_P) &&
+			  	 (perm & PTE_U) &&
+			 		!(perm & ~(PTE_P | PTE_U | PTE_AVAIL | PTE_W))))
+		{
+			return -E_INVAL;
+		}
+
+		// Make sure that srcva is mapped in current env
+		pte_t *pte;
+		struct Page *srcpage;
+		if ((srcpage = page_lookup(curenv->env_pgdir, srcva, &pte)) == NULL)
+			return -E_INVAL;
+		
+		// Ensure that source and perm are either both RO or W
+		if (perm & *pte & PTE_W)
+			return -E_INVAL;
+
+		// All checks out, try to map the page
+		r = page_insert(env->env_pgdir, srcpage, env->env_ipc_dstva, perm);
+		if(r < 0)
+			return r;
+
+		// Update perm
+		env->env_ipc_perm = perm;
+	}
+	else
+	{
+		// Update perm if we did not send a page
+		env->env_ipc_perm = 0;
+	}
+
+	// If we made it here, there were no errors, update fields
+	env->env_ipc_recving = 0;
+	env->env_ipc_from = curenv->env_id;
+	env->env_ipc_value = value;
+	env->env_status = ENV_RUNNABLE;
+	env->env_tf.tf_regs.reg_eax = 0;
+
+	return 0;
 }
 
 // Block until a value is ready.  Record that you want to receive
@@ -358,7 +414,23 @@ static int
 sys_ipc_recv(void *dstva)
 {
 	// LAB 4: Your code here.
-	panic("sys_ipc_recv not implemented");
+	
+	if((uint32_t)dstva < UTOP)
+	{
+		if((uint32_t)dstva % PGSIZE != 0)
+			return -E_INVAL;
+		curenv->env_ipc_dstva = dstva;
+	}
+	else
+	{
+		curenv->env_ipc_dstva = (void*)0xFFFFFFFF;
+	}
+
+	curenv->env_ipc_recving = 1;
+	curenv->env_status = ENV_NOT_RUNNABLE;
+	sched_yield();
+
+	
 	return 0;
 }
 
@@ -441,6 +513,13 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 			break;
 		case SYS_page_unmap:
 			ret = sys_page_unmap((envid_t)a1, (void*)a2);
+			break;
+		case SYS_ipc_try_send:
+			ret = sys_ipc_try_send((envid_t)a1, (uint32_t)a2, 
+														 (void*)a3, (unsigned) a4);
+			break;
+		case SYS_ipc_recv:
+			ret = sys_ipc_recv((void*)a1);
 			break;
 		default:
 			ret = -E_INVAL;

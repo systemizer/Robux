@@ -343,15 +343,16 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 	struct Env *env;
 	int r;
 	uint32_t srcint = (uint32_t)srcva;
+	struct Page *srcpage;
 
 	// Make sure env exists
 	if ((r = envid2env(envid, &env, 0) < 0))
 		return r;
-	// Make sure env receiving
-	if (!env->env_ipc_recving)
-		return -E_IPC_NOT_RECV;
 
-	if (srcint < UTOP && (uint32_t)env->env_ipc_dstva < UTOP)
+	int map_page = 0; // By default, we do not map a page
+
+	// First check that our input makes sense
+	if (srcint < UTOP)
 	{
 		// Check if srcva < UTOP but not page-aligned
 		if(srcint % PGSIZE != 0)
@@ -367,7 +368,6 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 
 		// Make sure that srcva is mapped in current env
 		pte_t *pte;
-		struct Page *srcpage;
 		if ((srcpage = page_lookup(curenv->env_pgdir, srcva, &pte)) == NULL)
 			return -E_INVAL;
 		
@@ -375,7 +375,40 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 		if (perm & *pte & PTE_W)
 			return -E_INVAL;
 
-		// All checks out, try to map the page
+		// Page mapping checks out, we are mapping a page if 
+		// they want it
+		map_page = 1;
+
+		
+	}
+
+	// Make sure env receiving
+	if (!env->env_ipc_recving)
+	{
+		// CHALLENGE: If the env is not receiving, set up
+		// send fields in our env and sleep for response.
+		// Note: The receiver now has the responsibility to
+		// map its own page based off of what we have entered in
+		// our struct (the va is guaranteed to be valid if it is < UTOP)
+		// It must also set our EAX to the error code for the mapping.
+		curenv->env_ipc_send_to = envid;
+		curenv->env_ipc_send_value = value;
+		curenv->env_ipc_send_srcva = srcva;
+		curenv->env_ipc_send_perm = perm;
+
+
+		// Sleep and yield
+		curenv->env_status = ENV_NOT_RUNNABLE;
+		sched_yield();
+	}
+
+	// The env is receiving, set their fields
+	
+	// Only map the page if our checks passed AND the destination VA
+	// is < UTOP
+	if(map_page && (uint32_t) env->env_ipc_dstva < UTOP)
+	{
+		// Map the page
 		r = page_insert(env->env_pgdir, srcpage, env->env_ipc_dstva, perm);
 		if(r < 0)
 			return r;
@@ -383,11 +416,7 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 		// Update perm
 		env->env_ipc_perm = perm;
 	}
-	else
-	{
-		// Update perm if we did not send a page
-		env->env_ipc_perm = 0;
-	}
+
 
 	// If we made it here, there were no errors, update fields
 	env->env_ipc_recving = 0;
@@ -398,6 +427,9 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 
 	return 0;
 }
+
+
+#define RECV_LIMIT 16
 
 // Block until a value is ready.  Record that you want to receive
 // using the env_ipc_recving and env_ipc_dstva fields of struct Env,
@@ -415,7 +447,7 @@ sys_ipc_recv(void *dstva)
 {
 	// LAB 4: Your code here.
 	
-	if((uint32_t)dstva < UTOP)
+		if((uint32_t)dstva < UTOP)
 	{
 		if((uint32_t)dstva % PGSIZE != 0)
 			return -E_INVAL;
@@ -425,6 +457,102 @@ sys_ipc_recv(void *dstva)
 	{
 		curenv->env_ipc_dstva = (void*)0xFFFFFFFF;
 	}
+	
+	
+	// LAB 4 CHALLENGE: Check if another env has queued a send to us
+	// If they do, receive it and return, short circuiting on the first
+	// received
+	
+	// i keeps track of the last index received from
+	static int i = 0;
+	static int recvs = RECV_LIMIT;
+	// k is the counting index, 
+	int k = i;
+	// j is the stop index, when j == k we end
+	int j;
+
+	// Loop over all envs circularly starting with the last one we received
+	// from
+	// Every RECV_LIMIT receives from the same env, start one after the
+	// last one we received from.
+	// This should eliminate livelock when one env is repeatedly queueing
+	// messages to this env faster than we receive, but it still provides
+	// good performance when we only want to receive from a small number of
+	// envs
+	int shift_j = 1;
+	for(j = k-1; k != j ; k = (k+1)%NENV)
+	{
+		// We need to shift j up 1 to that envs[i] is checked
+		// This solves the problem of finding the end of the ring
+		if(shift_j)
+		{
+			j = (j+1) % NENV;
+			shift_j = 0;
+		}
+
+		struct Env *env = &envs[k];
+		if(env->env_status == ENV_NOT_RUNNABLE &&
+			 env->env_ipc_send_to == curenv->env_id)
+		{
+			// This environment has a send waiting for us!
+			curenv->env_ipc_value = env->env_ipc_send_value;
+			curenv->env_ipc_from = env->env_id;
+
+			// Map the page iff they sent one AND we want one
+			if((uint32_t)env->env_ipc_send_srcva < UTOP &&
+					(uint32_t)curenv->env_ipc_dstva < UTOP)
+			{
+				int r;
+				struct Page *page = page_lookup(env->env_pgdir, 
+															env->env_ipc_send_srcva, NULL);
+				r = page_insert(curenv->env_pgdir, page, curenv->env_ipc_dstva, 
+																			env->env_ipc_send_perm);
+				if(r < 0)
+				{
+					// Error mapping, we need to make the send call receive the
+					// error and ignore it here as if it never happened
+					env->env_ipc_send_to = 0;
+					env->env_tf.tf_regs.reg_eax = r;
+					env->env_status = ENV_RUNNABLE;
+					continue;
+				}
+
+				curenv->env_ipc_perm = env->env_ipc_send_perm;
+			}
+			else
+			{
+				// If we do not map, clear perm
+				curenv->env_ipc_perm = 0;
+			}
+
+			// We have received it, check that we do not need to increment i
+			if(k == i)
+			{
+				if (--recvs == 0)
+				{
+					// If we have received RECV_LIMIT messages in a row from the same
+					// env, start checking one past that env next time to prevent
+					// livelock
+					recvs = RECV_LIMIT;
+					k++;
+				}
+			}
+			else
+			{
+				recvs = RECV_LIMIT;
+			}
+
+			i = k;
+
+			// Queued send has been received, ready the other env and return
+			env->env_ipc_send_to = 0;
+			env->env_tf.tf_regs.reg_eax = 0;
+			env->env_status = ENV_RUNNABLE;
+			return 0;
+		}
+	}
+	
+
 
 	curenv->env_ipc_recving = 1;
 	curenv->env_status = ENV_NOT_RUNNABLE;

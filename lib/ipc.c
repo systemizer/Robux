@@ -63,15 +63,10 @@ ipc_send(envid_t to_env, uint32_t val, void *pg, int perm)
 	if(!pg)
 		pg = (void*)0xFFFFFFFF;
 	
+	// No need to loop due to LAB 4 CHALLENGE
+	int ret;
+	ret = sys_ipc_try_send(to_env, val, pg, perm);
 	
-	int ret = -E_IPC_NOT_RECV;
-	while(ret == -E_IPC_NOT_RECV)
-	{
-		ret = sys_ipc_try_send(to_env, val, pg, perm);
-		if(ret != 0)
-			sys_yield();
-	}
-
 	if(ret != 0)
 		panic("ipc_send got unknown error %d: %e\n", ret, ret);
 	

@@ -16,10 +16,13 @@ kernel lock. If both used the same kernel stack, CPU 0 and CPU 1 would
 be using the same stack at the same time which is an error.
 
 Question 3:
-The address relative to the top of the kernel stack for the CPU remains the same.
-Since each CPU has its own stack, its address remains consistent after switching page
-directories since it is still executing on the same CPU. In other words, the mapping
-still maps to the same physical address as before the switch.
+Since each CPU has its own stack, the address of e remains consistent 
+after switching page directories since it is still executing on the 
+same CPU. In other words, the mapping still maps to the same physical
+address as before the switch. e points to a value that is above 
+KERNBASE, which is mapped into each environment's page directory. Both
+e and the value it points to appear at the same virtual addresses after
+the switch.
 
 
 Challenge:
@@ -68,7 +71,7 @@ it repeatedly receives from the same env, without ever servicing any other
 queued sends. To solve this problem, I first implemented a solution which 
 starts scanning circularly one past the env that last had a send serviced. 
 This showed OK performance, but it was suffering from repeatedly scanning 
-over 1000 envs in a loop. In the case that there was only one heavy sender
+over 1K envs in a loop. In the case that there was only one heavy sender 
 to the env, this solution reduced the throughput of that sender to improve
 latency for other requests.
 

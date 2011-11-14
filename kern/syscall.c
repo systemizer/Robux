@@ -368,7 +368,9 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 	{
 		// Check if srcva < UTOP but not page-aligned
 		if(srcint % PGSIZE != 0)
+		{
 			return -E_INVAL;
+		}
 
 		// Check that permissions are appropriate
 		if (!( (perm & PTE_P) &&
@@ -381,11 +383,15 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 		// Make sure that srcva is mapped in current env
 		pte_t *pte;
 		if ((srcpage = page_lookup(curenv->env_pgdir, srcva, &pte)) == NULL)
+		{
 			return -E_INVAL;
+		}
 		
 		// Ensure that source and perm are either both RO or W
-		if (perm & *pte & PTE_W)
+		if ((perm & PTE_W) != (*pte & PTE_W))
+		{
 			return -E_INVAL;
+		}
 
 		// Page mapping checks out, we are mapping a page if 
 		// they want it

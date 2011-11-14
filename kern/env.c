@@ -437,7 +437,20 @@ env_create(uint8_t *binary, size_t size, enum EnvType type)
 	// If this is the file server (type == ENV_TYPE_FS) give it I/O privileges.
 	// LAB 5: Your code here.
 	
-	
+	// Check that no other ENV is already FS
+	if (type == ENV_TYPE_FS)
+	{
+		int i;
+		for (i = 0; i < NENV; i++)
+		{
+			if (envs[i].env_status != ENV_FREE && 
+					envs[i].env_type == ENV_TYPE_FS)
+			{
+				panic("Already have a FS environment\n");
+			}
+		}
+	}
+
 	struct Env *env;
 	int err;
 	if ((err = env_alloc(&env, 0)) < 0)
@@ -445,7 +458,14 @@ env_create(uint8_t *binary, size_t size, enum EnvType type)
 		panic("env_alloc error: %e\n", err);
 	}
 
+	
+
 	env->env_type = type;
+
+	if (type == ENV_TYPE_FS)
+	{
+		env->env_tf.tf_eflags |= FL_IOPL_3;
+	}
 
 	load_icode(env, binary, size);
 }

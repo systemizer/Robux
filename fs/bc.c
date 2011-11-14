@@ -24,6 +24,12 @@ va_is_dirty(void *va)
 	return (vpt[PGNUM(va)] & PTE_D) != 0;
 }
 
+// Get the PTE for a virtual address
+int va_get_pte(void *va)
+{
+	return vpt[PGNUM(va)];
+}
+
 // Fault any disk block that is read or written in to memory by
 // loading it from disk.
 // Hint: Use ide_read and BLKSECTS.
@@ -49,7 +55,13 @@ bc_pgfault(struct UTrapframe *utf)
 	// the page dirty).
 	//
 	// LAB 5: Your code here
-	panic("bc_pgfault not implemented");
+	
+	// Alloc and insert the page for the block address
+	sys_page_alloc(sys_getenvid(), ROUNDDOWN(addr, PGSIZE), PTE_P | PTE_W | PTE_U);
+
+	// Read the data into the page we allocated
+	ide_read(blockno * BLKSECTS, ROUNDDOWN(addr, PGSIZE), BLKSECTS);
+
 
 	// Check that the block we read was allocated. (exercise for
 	// the reader: why do we do this *after* reading the block
@@ -74,7 +86,15 @@ flush_block(void *addr)
 		panic("flush_block of bad va %08x", addr);
 
 	// LAB 5: Your code here.
-	panic("flush_block not implemented");
+	if (va_is_mapped(addr) && va_is_dirty(addr))
+	{
+		// Write the block to disk
+		ide_write(blockno * BLKSECTS, ROUNDDOWN(addr, PGSIZE), BLKSECTS);
+		// Reset dirty bit for page
+		sys_page_map(sys_getenvid(), ROUNDDOWN(addr, PGSIZE),
+							   sys_getenvid(), ROUNDDOWN(addr, PGSIZE),
+								 va_get_pte(addr) & PTE_SYSCALL & ~PTE_D);
+	}
 }
 
 // Test that the block cache works, by smashing the superblock and

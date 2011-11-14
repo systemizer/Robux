@@ -86,6 +86,61 @@ struct UTrapframe {
 	uintptr_t utf_esp;
 } __attribute__((packed));
 
+void trap0(void);
+void trap1(void);
+void trap2(void);
+void trap3(void);
+void trap4(void);
+void trap5(void);
+void trap6(void);
+void trap7(void);
+void trap8(void);
+void trap9(void);
+void trap10(void);
+void trap11(void);
+void trap12(void);
+void trap13(void);
+void trap14(void);
+void trap15(void);
+void trap16(void);
+void trap17(void);
+void trap18(void);
+void trap19(void);
+void trap20(void);
+void trap21(void);
+void trap22(void);
+void trap23(void);
+void trap24(void);
+void trap25(void);
+void trap26(void);
+void trap27(void);
+void trap28(void);
+void trap29(void);
+void trap30(void);
+void trap31(void);
+
+void trap32(void);
+void trap33(void);
+void trap34(void);
+void trap35(void);
+void trap36(void);
+void trap37(void);
+void trap38(void);
+void trap39(void);
+void trap40(void);
+void trap41(void);
+void trap42(void);
+void trap43(void);
+void trap44(void);
+void trap45(void);
+void trap46(void);
+void trap47(void);
+
+void trap_sysc(void);
+
+void sysenter_handler(void);
+
+
 #endif /* !__ASSEMBLER__ */
 
 #endif /* !JOS_INC_TRAP_H */

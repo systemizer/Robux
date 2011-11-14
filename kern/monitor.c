@@ -25,6 +25,7 @@ struct Command {
 static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
+	{ "backtrace", "Display backtrace information", mon_backtrace}
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
@@ -60,7 +61,60 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf)
 int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
-	// Your code here.
+
+	/* Layout is:
+	 * argN
+	 * .
+	 * .
+	 * arg1
+	 * arg0
+	 * old eip (return address)
+	 * old ebp <-- ebp points here
+	 */
+
+	int *ebp = (int*)read_ebp();   // Current ebp
+	int *eip;											 // Space for return pointer
+	int i;                         // Counter
+	int *args[5];                  // Space for arguments
+	
+	cprintf("Stack backtrace:\n");
+  
+	do
+	{
+		eip = (int*)ebp[1];  // Get return address (next int after ebp)
+		for (i=0; i<5; i++)
+		{
+			// Get each arg
+			// args are after old ebp and eip,
+			// so we skip two entries after (*ebp)
+			args[i] = (int*)ebp[2+i];
+		}
+
+		// Format and output registers and args
+		cprintf("  ebp %08x  eip %08x  args %08x %08x %08x %08x %08x\n", ebp, 
+				eip, args[0], args[1], args[2], args[3], args[4]);
+
+
+		struct Eipdebuginfo info;
+		if (debuginfo_eip((int)eip, &info) == 0)
+		{
+			// Make buffer to save name, and copy the right number of chars
+			char name[info.eip_fn_namelen+1];
+			strncpy(name, info.eip_fn_name, info.eip_fn_namelen);
+			name[info.eip_fn_namelen]=0; // Terminate string
+
+			cprintf("         %s:%d: %s+%d\n", info.eip_file, info.eip_line, name, (int)eip - info.eip_fn_addr);	
+		}
+		else
+		{
+			cprintf("Error reading debuginfo\n");
+		}
+
+		// Go to next stack frame, stop if we reach NULL
+		ebp = (int*)(*ebp);
+		
+	} while (ebp != 0);
+
 	return 0;
 }
 

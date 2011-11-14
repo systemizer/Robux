@@ -193,6 +193,12 @@ cga_putc(int c)
 	}
 
 	// What is the purpose of this?
+	// MY NOTE:
+	// When the text is about to scroll off of the bottom of thescreen,
+	// this code moves the text on the screen up one row
+	// over top of the old first row (which is now lost),
+	// and moves the current position back to the beginning of
+	// the last line, which it clears to be blank.
 	if (crt_pos >= CRT_SIZE) {
 		int i;
 

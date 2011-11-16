@@ -1,5 +1,5 @@
 Question 1:
-This lab took me around 7-8 hours. I got held up doing some syscall debugging
+This lab took me around 8-9 hours. I got held up doing some syscall debugging
 and tracking down where it was returning -E_INVAL.
 The challenge probably took an hour and a half.
 

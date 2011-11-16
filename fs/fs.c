@@ -68,13 +68,13 @@ alloc_block(void)
 	// divided by 32, plus 1 only if the number of blocks is not a multiple
 	// of 32.
 	int total_words = super->s_nblocks / 32 + 
-										(super->s_nblocks % 32)?1:0;
+										((super->s_nblocks % 32)?1:0);
 
 	// Iterate over all 32-bit bitmap "words"
 	for (word = 0; word < total_words; word++)
 	{
-		// Check that all bits are not already set
-		if (bitmap[word] != ~0)
+		// Check that all bits are not already unset
+		if (bitmap[word] != 0)
 		{
 			// Find the least significant bit which is not already set
 			// by repeatedly shifting and checking for the first bit to 
@@ -94,6 +94,8 @@ alloc_block(void)
 			break;
 		}
 	}
+
+
 
 	// If we found a free block allocate it and return the number
 	// If there are no free blocks, return an error
@@ -191,7 +193,7 @@ file_block_walk(struct File *f, uint32_t filebno, uint32_t **ppdiskbno, bool all
 	uint32_t *indirect_block;
 
 	// Set the address of the indirect block, allocating if necessary
-	if (f->f_indirect != 0)
+	if (f->f_indirect == 0)
 	{
 		// Ensure that we were instructed to allocate the indirect block
 		if (!alloc)
@@ -545,7 +547,9 @@ file_flush(struct File *f)
 	}
 	flush_block(f);
 	if (f->f_indirect)
+	{
 		flush_block(diskaddr(f->f_indirect));
+	}
 }
 
 // Remove a file by truncating it and then zeroing the name.
@@ -572,6 +576,8 @@ fs_sync(void)
 {
 	int i;
 	for (i = 1; i < super->s_nblocks; i++)
+	{
 		flush_block(diskaddr(i));
+	}
 }
 

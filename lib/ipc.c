@@ -65,6 +65,7 @@ ipc_send(envid_t to_env, uint32_t val, void *pg, int perm)
 	
 	// No need to loop due to LAB 4 CHALLENGE
 	int ret;
+
 	ret = sys_ipc_try_send(to_env, val, pg, perm);
 	
 	if(ret != 0)

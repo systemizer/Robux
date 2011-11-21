@@ -70,7 +70,7 @@
 #define PTE_AVAIL	0xE00	// Available for software use
 
 // Flags in PTE_SYSCALL may be used in system calls.  (Others may not.)
-#define PTE_SYSCALL	(PTE_AVAIL | PTE_P | PTE_W | PTE_U)
+#define PTE_SYSCALL	(PTE_AVAIL | PTE_P | PTE_W | PTE_U | PTE_A | PTE_D)
 
 // Address in page table or page directory entry
 #define PTE_ADDR(pte)	((physaddr_t) (pte) & ~0xFFF)

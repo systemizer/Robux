@@ -104,6 +104,7 @@ umain(int argc, char **argv)
 	memset(buf, 0, sizeof(buf));
 	for (i = 0; i < (NDIRECT*3)*BLKSIZE; i += sizeof(buf)) {
 		*(int*)buf = i;
+		printf("Writing %d\n", i);
 		if ((r = write(f, buf, sizeof(buf))) < 0)
 			panic("write /big@%d: %e", i, r);
 	}

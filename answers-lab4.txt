@@ -1,0 +1,90 @@
+Question 1: 
+The difference between mpentry.S and boot.S is that the
+code from boot.S is linked to run at a low physical address. mpentry.S
+is linked to run above KERNBASE, so it has high addresses. MPBOOTPHYS
+subtracts the address of the start symbol from the address being used
+to calculate the physical address from the high link address that it
+knows. If it were omitted, mpentry.S code would be using high addresses
+that are not yet valid, which would fail.
+
+Question 2: 
+Multiple CPUs may trap into the kernel at the same time
+without holding the lock. For instance, if CPU 1 were in trap() with the
+kernel lock held, CPU 0 may still trigger an interrupt. The interrupt
+handler is run on the kernel's stack before it could try to acquire the
+kernel lock. If both used the same kernel stack, CPU 0 and CPU 1 would
+be using the same stack at the same time which is an error.
+
+Question 3:
+Since each CPU has its own stack, the address of e remains consistent 
+after switching page directories since it is still executing on the 
+same CPU. In other words, the mapping still maps to the same physical
+address as before the switch. e points to a value that is above 
+KERNBASE, which is mapped into each environment's page directory. Both
+e and the value it points to appear at the same virtual addresses after
+the switch.
+
+
+Challenge:
+I modified the kernel so that ipc_send does not need to loop.
+
+My solution involves detecting when the target env is not waiting
+to receive, then saving the data to a known place and sleeping 
+until the target env notifies the sender that they have processed the message.
+Several senders can then queue messages to one receiver without spinning 
+in a loop making repeated SYS_ipc_try_send syscalls.
+
+I first changed inc/env.h to create room to store the parameters to sys_ipc_try_send.
+
+If the target env is receiving in sys_ipc_try_send then the 
+function behaves as it did before, since the send can be serviced 
+immediately. If the target is not receiving, the function sets the values
+in curenv to be the values passed in to the function. It does this after 
+verifying that they are correct, so the recv function does not need to 
+verify them. It then sets the curenv status to ENV_NOT_RUNNABLE and yields,
+effectively putting itself to sleep.
+
+The changes to sys_ipc_recv were more complicated. Before blocking, 
+sys_ipc_recv scans the envs array for an env with status ENV_NOT_RUNNABLE
+and env_ipc_send_to equal to its own env_id. If one is found, it services the
+blocking send call by copying the relevant values into its struct Env and
+attempting to map the shared page. If a page mapping is found to be
+necessary and page_insert fails, then it resets the env_ipc_send_to in the
+sender, sets the sender's EAX to the error code and sets it as runnable.
+The page mapping could not be done in the sender as the dstva field was not
+valid at send time, so this effectively defers it to now and reacts to 
+errors as before. If everything works and the values are set correctly in the
+receiving env then, in the sender, we reset env_ipc_send_to, set EAX to 0
+to indicate success, and set the env to ENV_RUNNABLE so that it can be 
+run again. The function then returns so that only one sending env is
+woken up for each recv.
+If no queued sends are found, then the function blocks as before.
+
+The interface remains identical while the implementation has 
+changed drastically.
+
+There are some design decisions that should be noted in how sys_ipc_recv 
+chooses which env it will receive from. Repeatedly scanning from the 
+beginning of the envs array introduces the possibility of livelock if one
+env is sending data faster than the target env can receive it. In this case
+it repeatedly receives from the same env, without ever servicing any other
+queued sends. To solve this problem, I first implemented a solution which 
+starts scanning circularly one past the env that last had a send serviced. 
+This showed OK performance, but it was suffering from repeatedly scanning 
+over 1K envs in a loop. In the case that there was only one heavy sender 
+to the env, this solution reduced the throughput of that sender to improve
+latency for other requests.
+
+I created a new system with a RECV_LIMIT which starts the scan from the last
+env that anyone received from. If the call can receive from that env, it 
+decrements a "recvs" counter that was initialized to RECV_LIMIT. When that
+counter reaches 0, it increments the next index that it will start reading
+from and resets the counter to RECV_LIMIT. If the call cannot retrieve from
+the same env as before, it resets the recvs counter to RECV_LIMIT.
+
+This allows heavy senders to get a burst of messages through before the
+entire envs array needs to be scanned. RECV_LIMIT was arbitrarily set to 
+16, but that value could be tuned to balance throughput and latency in
+IPC. Other possible changes are to have per-env "recvs" counters rather 
+than one global one. The effects of tuning may be more apparent in that case.
+

@@ -91,6 +91,12 @@ page2kva(struct Page *pp)
 pte_t *pgdir_walk(pde_t *pgdir, const void *va, int create);
 
 
+void boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm);
+void boot_map_region_pse(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm);
+void 
+boot_unmap_region(pde_t *pgdir, uintptr_t va, size_t size);
+
+
 // Call CPUID with EAX=1 to get feature list for processor
 // and use that list to determine if the CPU supports PSE.
 // The values after calling CPUID with EAX=1 are:

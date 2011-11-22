@@ -1,0 +1,9 @@
+Question 1:
+I created a syscall called SYS_net_send_packet which takes an address
+and a length of the packet stored at that address.
+Internally, this copies the packet out of userspace into a temp buffer
+in the kernel and calls my e1000_send_packet function on that buffer (which
+is page_aligned).
+If the ring is full, I loop on the DD status bit being clear. When it is
+set the function completes the transmit and returns.
+

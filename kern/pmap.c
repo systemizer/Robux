@@ -66,8 +66,6 @@ static void check_kern_pgdir(void);
 static physaddr_t check_va2pa(pde_t *pgdir, uintptr_t va);
 static void check_page(void);
 static void check_page_installed_pgdir(void);
-static void boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm);
-static void boot_map_region_pse(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm);
 
 // This simple physical memory allocator is used only while JOS is setting
 // up its virtual memory system.  page_alloc() is the real allocator.
@@ -350,6 +348,34 @@ mem_init_mp(void)
 
 }
 
+// Unmap a region WITHOUT FREEING PAGES
+// Use this function to open some space in the physical memory remapping
+// which may or may not be mapped using 4MB pages.
+void 
+boot_unmap_region(pde_t *pgdir, uintptr_t va, size_t size)
+{
+	uintptr_t virt;
+	for(virt = va; virt < va+size; virt += PGSIZE)
+	{
+		pde_t *entry = &pgdir[PDX(virt)];
+
+		if(!(*entry & PTE_P))
+			continue;
+
+		// 4MB page, clear PDE
+		if(*entry & PTE_PS)
+		{
+			*entry = 0;
+		}
+		// 4KB page, clear associated PTE
+		else
+		{
+			pte_t *pte = pgdir_walk(pgdir, (void*)virt, 0);
+			*pte = 0;
+		}
+	}
+}
+
 // --------------------------------------------------------------
 // Tracking of physical pages.
 // The 'pages' array has one 'struct Page' entry per physical page.
@@ -562,7 +588,7 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 // To simplify implementation, this loops over all 4KiB pages that would be 
 // allocated and keeps reinitializing the PDE for the containing 4MiB page.
 // Use permission bits perm | PTE_PS | PTE_P
-static void
+void
 boot_map_region_pse(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
 {
 	uintptr_t virt;

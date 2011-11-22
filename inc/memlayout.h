@@ -26,6 +26,8 @@
  *                     |       Memory-mapped I/O      | RW/--
  *    IOMEMBASE ---->  +------------------------------+ 0xfe000000
  *                     |                              | RW/--
+ *    NETMEMBASE --->  +------------------------------+ 0xfd000000
+ *                     |                              | RW/--
  *                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *                     :              .               :
  *                     :              .               :
@@ -143,6 +145,8 @@
 #define IOMEM_PADDR	0xfe000000
 // The virtual address we map IO memory to
 #define IOMEMBASE	0xfe000000
+
+#define NETMEMBASE 	0xfd000000
 
 #ifndef __ASSEMBLER__
 

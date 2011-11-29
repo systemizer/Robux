@@ -182,7 +182,14 @@ sys_time_msec(void)
 	return (unsigned int) syscall(SYS_time_msec, 0, 0, 0, 0, 0, 0);
 }
 
-int sys_net_send_packet(void *buf, uint16_t len)
+int 
+sys_net_send_packet(void *buf, uint16_t len)
 {
 	return syscall(SYS_net_send_packet, 0, (uint32_t)buf, len, 0, 0, 0);
+}
+
+int 
+sys_net_recv_packet(void *buf)
+{
+	return syscall(SYS_net_recv_packet, 0, (uint32_t)buf, 0, 0, 0, 0);
 }

@@ -624,13 +624,30 @@ sys_net_send_packet(void *addr, uint16_t len)
 		return -E_INVAL;
 
 	// TODO: Fix this
-	// Panic for now is packet is too big, fix this later
+	// Panic for now if packet is too big, fix this later
 	if(len > 4096)
-		panic("Packet is to big! %d bytes\n", len);
+		panic("Packet is too big! %d bytes\n", len);
 
 	memmove(tx_page, addr, len);
 
 	return e1000_send_packet(tx_page, len);
+}
+
+int
+sys_net_recv_packet(void *addr)
+{
+	// Make sure user can access memory
+	if(user_mem_check(curenv, addr, PGSIZE, PTE_U | PTE_W) != 0)
+		return -E_INVAL;
+
+	int r;
+	uint16_t len;
+	// Receive, and pass error to caller on failure
+	if((r = e1000_recv_packet(addr, &len)) < 0)
+		return r;
+
+	// Return packet size
+	return len;
 }
 
 // If a call uses sysenter, it does not go through trap and lock
@@ -727,6 +744,9 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 			break;
 		case SYS_net_send_packet:
 			ret = sys_net_send_packet((void*)a1, (uint16_t)a2);
+			break;
+		case SYS_net_recv_packet:
+			ret = sys_net_recv_packet((void*)a1);
 			break;
 		default:
 			ret = -E_INVAL;

@@ -61,12 +61,35 @@
 #define E1000_TBT      0x00448  /* TX Burst Timer - RW */
 #define E1000_AIT      0x00458  /* Adaptive Interframe Spacing Throttle - RW */
 
+#define E1000_RDBAL    0x02800  /* RX Descriptor Base Address Low - RW */
+#define E1000_RDBAH    0x02804  /* RX Descriptor Base Address High - RW */
+#define E1000_RDLEN    0x02808  /* RX Descriptor Length - RW */
+#define E1000_RDH      0x02810  /* RX Descriptor Head - RW */
+#define E1000_RDT      0x02818  /* RX Descriptor Tail - RW */
+#define E1000_RDTR     0x02820  /* RX Delay Timer - RW */
+#define E1000_RDBAL0   E1000_RDBAL /* RX Desc Base Address Low (0) - RW */
+#define E1000_RDBAH0   E1000_RDBAH /* RX Desc Base Address High (0) - RW */
+#define E1000_RDLEN0   E1000_RDLEN /* RX Desc Length (0) - RW */
+#define E1000_RDH0     E1000_RDH   /* RX Desc Head (0) - RW */
+#define E1000_RDT0     E1000_RDT   /* RX Desc Tail (0) - RW */
+#define E1000_RDTR0    E1000_RDTR  /* RX Delay Timer (0) - RW */
+#define E1000_RXDCTL   0x02828  /* RX Descriptor Control queue 0 - RW */
+
 
 #define E1000_TDBAL    0x03800  /* TX Descriptor Base Address Low - RW */
 #define E1000_TDBAH    0x03804  /* TX Descriptor Base Address High - RW */
 #define E1000_TDLEN    0x03808  /* TX Descriptor Length - RW */
 #define E1000_TDH      0x03810  /* TX Descriptor Head - RW */
 #define E1000_TDT      0x03818  /* TX Descripotr Tail - RW */
+
+#define E1000_RAH_AV 0x80000000
+#define E1000_RAH			 0x05404
+#define E1000_RAL			 0x05400
+
+#define E1000_RCTL_EN_FLAG 0x02
+#define E1000_RCTL_BSIZE_256 (0x11 << 16)
+#define E1000_RCTL_BSEX (0x1 << 25)
+
 
 #define E1000_TCTL_EN_FLAG  0x02
 #define E1000_TCTL_PSP_FLAG 0x08
@@ -89,18 +112,36 @@ struct tx_desc
 	uint16_t special;
 };
 
+struct rx_desc
+{
+	uint64_t addr;
+	uint16_t length;
+	uint16_t checksum;
+	uint8_t status;
+	uint8_t errors;
+	uint16_t special;
+};
+
 #define TXD_CMD_RS 0x8
 #define TXD_CMD_EOP 0x1
 #define TXD_STATUS_DD 0x1
+
+#define RXD_STATUS_DD 0x1
+#define RXD_STATUS_EOP 0x2
 
 #define E1000_NUM_DESC 32
 
 extern volatile struct tx_desc tx_desc_arr[];
 
+extern volatile struct rx_desc rx_desc_arr[];
+
 
 
 void e1000_init_tx_desc_arr();
+void e1000_init_rx_desc_arr();
+
 int e1000_send_packet(void *addr, uint16_t length);
+int e1000_recv_packet(void *addr, uint16_t *length);
 
 
 #endif	// JOS_KERN_E1000_H

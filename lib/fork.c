@@ -73,6 +73,7 @@ duppage(envid_t envid, unsigned pn)
 		perm |= PTE_COW;
 		perm &= ~PTE_W;
 	}
+
 	int ret = sys_page_map(myid, (void*)(pn*PGSIZE), envid, (void*)(pn*PGSIZE), perm);
 	if(ret < 0)
 		return ret;
@@ -115,7 +116,7 @@ fork(void)
 	{
 		// In parent, set up child
 		int i;
-		for(i=0; i < ULIM >> 12; i++)
+		for(i=0; i < UTOP >> 12; i++)
 		{
 			
 			if(i << 12 == UXSTACKTOP - PGSIZE)
@@ -126,7 +127,7 @@ fork(void)
 
 			// Get the pte permissions combined with pde
 			pte_t pte = vpt[i];
-			pte &= 0xFFF & vpd[i>>10];
+			pte &= 0xFFF & (vpd[i>>10] | PTE_COW); // Fixed: OR in COW
 			if(pte & PTE_P && pte & (PTE_W | PTE_COW))
 			{
 				ret = duppage(newid, i);
@@ -135,7 +136,9 @@ fork(void)
 			}
 			else if(pte & PTE_P)
 			{
-				ret = sys_page_map(myid, (void*)(i*PGSIZE), newid, (void*)(i*PGSIZE), pte & PTE_SYSCALL);
+				ret = sys_page_map(myid, (void*)(i*PGSIZE), newid, (void*)(i*PGSIZE), pte & 0xFFF);
+				if(ret < 0)
+					panic("Failed to copy page mapping to child: %e\n", ret);
 			}
 		}
 

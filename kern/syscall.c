@@ -650,6 +650,17 @@ sys_net_recv_packet(void *addr)
 	return len;
 }
 
+int
+sys_get_mac_addr(uint8_t *addr)
+{
+	if(user_mem_check(curenv, addr, 6, PTE_U | PTE_W) != 0)
+		return -E_INVAL;
+
+	e1000_read_mac(addr);
+
+	return 0;
+}
+
 // If a call uses sysenter, it does not go through trap and lock
 // the kernel lock.
 // Check if we got one of those, and lock the kernel if we did.
@@ -747,6 +758,9 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 			break;
 		case SYS_net_recv_packet:
 			ret = sys_net_recv_packet((void*)a1);
+			break;
+		case SYS_get_mac_addr:
+			ret = sys_get_mac_addr((uint8_t*)a1);
 			break;
 		default:
 			ret = -E_INVAL;

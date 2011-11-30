@@ -246,6 +246,12 @@ send_file(struct http_request *req)
 		return 0;
 	}
 
+	if(stat.st_isdir)
+	{
+		send_error(req, 404);
+		return 0;
+	}
+
 	file_size = stat.st_size;
 
 	

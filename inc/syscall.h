@@ -20,6 +20,7 @@ enum {
 	SYS_time_msec,
 	SYS_net_send_packet,
 	SYS_net_recv_packet,
+	SYS_get_mac_addr,
 	NSYSCALLS
 };
 

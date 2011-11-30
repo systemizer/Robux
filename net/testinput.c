@@ -16,7 +16,8 @@ announce(void)
 	// listens for very specific ARP requests, such as requests
 	// for the gateway IP.
 
-	uint8_t mac[6] = {0x52, 0x54, 0x00, 0x12, 0x34, 0x56};
+	uint8_t mac[6];
+	sys_get_mac_addr(mac);
 	uint32_t myip = inet_addr(IP);
 	uint32_t gwip = inet_addr(DEFAULT);
 	int r;

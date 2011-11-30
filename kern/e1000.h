@@ -82,6 +82,13 @@
 #define E1000_TDH      0x03810  /* TX Descriptor Head - RW */
 #define E1000_TDT      0x03818  /* TX Descripotr Tail - RW */
 
+#define E1000_EERD_ADDR_LOW2 (0x00 << 8)
+#define E1000_EERD_ADDR_MID2 (0x01 << 8)
+#define E1000_EERD_ADDR_HIG2 (0x02 << 8)
+#define E1000_EERD_START (0x1)
+#define E1000_EERD_DONE (1 << 4)
+#define E1000_EERD_DATA_SHIFT 16
+
 #define E1000_RAH_AV 0x80000000
 #define E1000_RAH			 0x05404
 #define E1000_RAL			 0x05400
@@ -89,6 +96,7 @@
 #define E1000_RCTL_EN_FLAG 0x02
 #define E1000_RCTL_BSIZE_256 (0x11 << 16)
 #define E1000_RCTL_BSEX (0x1 << 25)
+#define E1000_RCTL_SECRC (0x1 << 26)
 
 
 #define E1000_TCTL_EN_FLAG  0x02
@@ -144,4 +152,5 @@ int e1000_send_packet(void *addr, uint16_t length);
 int e1000_recv_packet(void *addr, uint16_t *length);
 
 
+void e1000_read_mac(uint8_t arr[6]);
 #endif	// JOS_KERN_E1000_H

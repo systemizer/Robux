@@ -237,13 +237,21 @@ pci_network_attach(struct pci_func *pcif)
 	e1000[E1000_INDEX(E1000_RDT)] = E1000_NUM_DESC - 1;
 
 	// Set ethernet address for recv
-	e1000[E1000_INDEX(E1000_RAL)] = 0x12005452;
-	e1000[E1000_INDEX(E1000_RAH)] = 0x5634 | E1000_RAH_AV;
+	uint8_t mac[6];
+	e1000_read_mac(mac);
+	e1000[E1000_INDEX(E1000_RAL)] = mac[3] << 24 | 
+																  mac[2] << 16 | 
+																	mac[1] << 8 | 
+																	mac[0];
+	e1000[E1000_INDEX(E1000_RAH)] = mac[5]<<8 | mac[4] | E1000_RAH_AV;
+	//e1000[E1000_INDEX(E1000_RAL)] = 0x12005452;
+	//e1000[E1000_INDEX(E1000_RAH)] = 0x5634 | E1000_RAH_AV;
 
 	// Enable RX
 	e1000[E1000_INDEX(E1000_RCTL)] = E1000_RCTL_EN_FLAG |
 																	 E1000_RCTL_BSIZE_256 |
-																	 E1000_RCTL_BSEX;
+																	 E1000_RCTL_BSEX |
+																	 E1000_RCTL_SECRC;
 
 
 	return 1;

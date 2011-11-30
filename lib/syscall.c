@@ -193,3 +193,9 @@ sys_net_recv_packet(void *buf)
 {
 	return syscall(SYS_net_recv_packet, 0, (uint32_t)buf, 0, 0, 0, 0);
 }
+
+int
+sys_get_mac_addr(uint8_t buf[6])
+{
+	return syscall(SYS_get_mac_addr, 0, (uint32_t) buf, 0, 0, 0, 0);
+}

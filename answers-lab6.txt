@@ -7,3 +7,62 @@ is page_aligned).
 If the ring is full, I loop on the DD status bit being clear. When it is
 set the function completes the transmit and returns.
 
+Question 2:
+I initialized a receive queue that is the same size as the send queue in
+the driver. Space for each packet's data is pre-allocated, with one PGSIZE
+buffer associated with each receive queue descriptor entry. When the
+queue is empty and a packet receive is requested, the driver returns
+the error -E_NET_NOT_RECV so that the input service can try again.
+The input service has a large number of PGSIZE buffers allocated on page
+boundaries, forming a ring buffer. It loops through these in sequence, 
+writing to a different one for each NBUFS receives. This prevents it from
+immediately reusing a buffer it had just passed to the NS.
+
+Question 3:
+The web page says: 
+
+This file came from JOS
+Cheesy web page!
+
+The first line is in larger text. The HTML for the page is:
+
+<html>
+<head>
+<title>jhttpd on JOS</title>
+</head>
+<body>
+<center>
+<h2>This file came from JOS.</h2>
+<blink>Cheesy web page!</blink>
+</center>
+</body>
+</html>
+
+The second line did not blink for me, probably because my browser disables that tag (which I really appreciate).
+
+Question 4:
+This lab took roughly 10 hours. I had a lot of trouble with receive because I forgot to strip the CRC. Once that was fixed, everything worked.
+
+Challenge:
+I implemented reading the mac address from EEPROM.
+I created a function in the driver called e1000_read_mac(uint8_t [6])
+which reads the mac from EEPROM using the EERD register and places
+the MAC in big-endian order into the array of bytes referred to by the
+argument. I created a syscall called sys_get_mac_addr which takes an array
+and calls the e1000_read_mac function to fill in the data.
+
+The E1000's EERD register allows software to read the contents of the 
+E1000's EEPROM. Writing the index of the requested value to the
+register and setting the "start" bit in the register begins the read. 
+I then spin on the "done" bit of the register (as recommended in the
+manual) until the read is done. Once the read is done, the data is in the
+high-order 16-bit word in the EERD register. Three reads are required to
+get the low word, middle word, and high word of the mac address.
+I place this data in big-endian order into the 6 byte buffer passed into
+my driver function.
+
+The pci initialization function was modified to use e1000_read_mac directly
+to get the mac address, and lwIP uses the syscall to get the mac address.
+testinput was modified to also read the mac address of the card.
+I modified GNUMakefile to set the mac address to "52:54:00:AA:13:37".
+Those three places correctly read this new MAC address.

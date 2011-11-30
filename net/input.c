@@ -34,7 +34,7 @@ retry:
 		packet->jp_len = r;
 		ipc_send(ns_envid, NSREQ_INPUT, packet, PTE_P | PTE_U | PTE_W);
 
-		cprintf("0x%08x %d\n", packet, buf);
+		//cprintf("0x%08x %d\n", packet, buf);
 		buf = (buf + 1) % NBUFS;
 	  packet = (struct jif_pkt*) &data[PGSIZE*buf];
 	}
@@ -42,6 +42,7 @@ retry:
 	{
 		goto retry;
 	}
+
 	cprintf("0x%08x %d %x\n", packet, buf, PGSIZE*buf);
 	cprintf("net input: sys_net_recv_packet failed: %e\n", r);
 }

@@ -127,8 +127,8 @@ fork(void)
 
 			// Get the pte permissions combined with pde
 			pte_t pte = vpt[i];
-			pte &= PTE_SYSCALL & (vpd[i>>10] | PTE_COW); // Fixed: OR in COW
-			if(pte & PTE_P && pte & (PTE_W | PTE_COW) && (pte & PTE_SHARE == 0))
+			pte &= PTE_SYSCALL & (vpd[i>>10] | PTE_COW | PTE_SHARE); // Fixed: OR in COW
+			if(pte & PTE_P && pte & (PTE_W | PTE_COW) && ((pte & PTE_SHARE) == 0))
 			{
 				ret = duppage(newid, i);
 				if(ret < 0)

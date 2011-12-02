@@ -1,5 +1,6 @@
 #include <inc/lib.h>
 #include <inc/elf.h>
+#include <inc/mmu.h>
 
 #define UTEMP2USTACK(addr)	((void*) (addr) + (USTACKTOP - PGSIZE) - UTEMP)
 #define UTEMP2			(UTEMP + PGSIZE)
@@ -301,6 +302,10 @@ static int
 copy_shared_pages(envid_t child)
 {
 		int i;
+		int ret;
+
+		envid_t myid;
+		myid = sys_getenvid();
 		for(i=0; i < UTOP >> 12; i++)
 		{
 			
@@ -310,17 +315,16 @@ copy_shared_pages(envid_t child)
 				continue;
 
 
-			// Get the pte permissions combined with pde
+			// Get the pte permissions
 			pte_t pte = vpt[i];
-			pte &= PTE_SYSCALL & (vpd[i>>10] | PTE_COW); // Fixed: OR in COW
 			if(pte & PTE_P && pte & PTE_SHARE)
 			{
-				ret = sys_page_map(myid, (void*)(i*PGSIZE), newid, (void*)(i*PGSIZE), pte & PTE_SYSCALL);
+				ret = sys_page_map(myid, (void*)(i*PGSIZE), child, (void*)(i*PGSIZE), pte & PTE_SYSCALL);
 				if(ret < 0)
 					panic("Failed to copy [W] page mapping to child in spawn: %e\n", ret);
 			}
+		}
 
-// LAB 7: Your code here.
 	return 0;
 }
 

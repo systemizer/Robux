@@ -300,7 +300,27 @@ map_segment(envid_t child, uintptr_t va, size_t memsz,
 static int
 copy_shared_pages(envid_t child)
 {
-	// LAB 7: Your code here.
+		int i;
+		for(i=0; i < UTOP >> 12; i++)
+		{
+			
+			if(i << 12 == UXSTACKTOP - PGSIZE)
+				continue;
+			if(!vpd[i>>10] & PTE_P)
+				continue;
+
+
+			// Get the pte permissions combined with pde
+			pte_t pte = vpt[i];
+			pte &= PTE_SYSCALL & (vpd[i>>10] | PTE_COW); // Fixed: OR in COW
+			if(pte & PTE_P && pte & PTE_SHARE)
+			{
+				ret = sys_page_map(myid, (void*)(i*PGSIZE), newid, (void*)(i*PGSIZE), pte & PTE_SYSCALL);
+				if(ret < 0)
+					panic("Failed to copy [W] page mapping to child in spawn: %e\n", ret);
+			}
+
+// LAB 7: Your code here.
 	return 0;
 }
 

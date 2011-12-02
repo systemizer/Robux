@@ -127,16 +127,22 @@ fork(void)
 
 			// Get the pte permissions combined with pde
 			pte_t pte = vpt[i];
-			pte &= 0xFFF & (vpd[i>>10] | PTE_COW); // Fixed: OR in COW
-			if(pte & PTE_P && pte & (PTE_W | PTE_COW))
+			pte &= PTE_SYSCALL & (vpd[i>>10] | PTE_COW); // Fixed: OR in COW
+			if(pte & PTE_P && pte & (PTE_W | PTE_COW) && (pte & PTE_SHARE == 0))
 			{
 				ret = duppage(newid, i);
 				if(ret < 0)
 					panic("Failed to duppage in parent fork: %e at i = %d\n", ret, i);
 			}
+			else if(pte & PTE_P && pte & PTE_SHARE)
+			{
+				ret = sys_page_map(myid, (void*)(i*PGSIZE), newid, (void*)(i*PGSIZE), pte & PTE_SYSCALL);
+				if(ret < 0)
+					panic("Failed to copy [W] page mapping to child: %e\n", ret);
+			}
 			else if(pte & PTE_P)
 			{
-				ret = sys_page_map(myid, (void*)(i*PGSIZE), newid, (void*)(i*PGSIZE), pte & 0xFFF);
+				ret = sys_page_map(myid, (void*)(i*PGSIZE), newid, (void*)(i*PGSIZE), pte & PTE_SYSCALL);
 				if(ret < 0)
 					panic("Failed to copy page mapping to child: %e\n", ret);
 			}

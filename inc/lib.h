@@ -60,6 +60,9 @@ int	sys_page_unmap(envid_t env, void *pg);
 int	sys_ipc_try_send(envid_t to_env, uint32_t value, void *pg, int perm);
 int	sys_ipc_recv(void *rcv_pg);
 unsigned int sys_time_msec(void);
+int sys_net_send_packet(void*, uint16_t);
+int sys_net_recv_packet(void*);
+int sys_get_mac_addr(uint8_t [6]);
 
 // This must be inlined.  Exercise for reader: why?
 static __inline envid_t __attribute__((always_inline))

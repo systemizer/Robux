@@ -1,0 +1,67 @@
+Question 1:
+This lab took me around 8-9 hours. I got held up doing some syscall debugging
+and tracking down where it was returning -E_INVAL.
+The challenge probably took an hour and a half.
+
+Question 2:
+The lab was good, but I feel like a lot of the code for dealing with 
+FS issues was already there. It fit well into a week-long lab, and I have a
+good understand of file system implementation based on this.
+
+I would have liked to have done implementation of whatever utility lays out
+the initial FS on the disk, and then some more work reading in superblocks
+to get a better understanding. Of course, I could have done the inode
+challenge if I really wanted to dig deeper, so at least the option is there.
+
+
+Challenge:
+For the challenge I implemented a cache-eviction policy that approximately 
+follows LRU replacement.
+
+There are a specific number of slots open in the cache (BLOCK_CACHE_MAX).
+
+When a new block is being demand-mapped into memory while he cache is full
+two things happen:
+1. The cache is "rotated". That is, the LRU list is gone through front 
+to back, and those entries that have been accessed (PTE_A set) are moved
+to the back of the list in order. 
+2. The first entry in the cache is evicted. That is, its entry is removed
+from the list and the page for the block is unmapped.
+
+The page for the new block may then be mapped and an entry is added to the
+cache.
+
+The implementation of this required several changes to fs/bc.c.
+
+First, structures to hold each entry in the block cache (BlockCacheEntry)
+and the block cache head, tail, and size (BlockCacheList) were created.
+The cache is a doubly-linked-list.
+
+There are exactly BLOCK_CACHE_MAX BlockCacheEntry structures available 
+in memory. The function alloc_block_entry was created to find a free
+one and return it, and the function free_block_entry was created to
+free a used entry. This prevents the cache from using any new page mappings
+to hold entries. The function init_block_entries initializes these
+entries during block cache initialization.
+
+Functions block_cache_insert and block_cache_remove were created to insert
+and remove cache entries from the list respectively. block_cache_insert
+always appends to the end of the list.  One important thing
+to note is that block_cache_insert will not accept insertion of the
+superblock (blockno == 1) since the management routines require accessing the
+superblock. The result is that the superblock is always cached and is not
+eligible for eviction through the BlockCacheList.
+
+Function block_cache_rotate performs the rotation operation to put the
+list into LRU order before attempting to evict a block. Rotation iterates
+through the entries in the list and checks if the corresponding page 
+has been accessed since the last time rotate has been run. If so, the 
+entry is moved to the end of the list, and the PTE_A bit on the page is 
+cleared. This enforces an approximate LRU because all blocks that were 
+used since the last rotation are moved to the end of the list in order.
+A real LRU would require keeping track of access times, which is more 
+complicated.
+
+Function block_cache_evict evicts the first block on the list from the cache.
+It does so by removing the entry, flushing the page if dirty, and unmapping
+the page.

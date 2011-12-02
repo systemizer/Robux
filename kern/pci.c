@@ -4,6 +4,7 @@
 #include <kern/pci.h>
 #include <kern/pcireg.h>
 #include <kern/e1000.h>
+#include <kern/pmap.h>
 
 // Flag to do "lspci" at bootup
 static int pci_show_devs = 1;
@@ -15,6 +16,7 @@ static uint32_t pci_conf1_data_ioport = 0x0cfc;
 
 // Forward declarations
 static int pci_bridge_attach(struct pci_func *pcif);
+static int pci_network_attach(struct pci_func *pcif);
 
 // PCI driver table
 struct pci_driver {
@@ -30,6 +32,7 @@ struct pci_driver pci_attach_class[] = {
 
 // pci_attach_vendor matches the vendor ID and device ID of a PCI device
 struct pci_driver pci_attach_vendor[] = {
+	{ E1000_VENDOR_ID, E1000_DEVICE_ID, &pci_network_attach},
 	{ 0, 0, 0 },
 };
 
@@ -182,6 +185,75 @@ pci_bridge_attach(struct pci_func *pcif)
 			(busreg >> PCI_BRIDGE_BUS_SUBORDINATE_SHIFT) & 0xff);
 
 	pci_scan_bus(&nbus);
+	return 1;
+}
+
+
+// Network PCI attach
+
+extern volatile uint32_t *e1000;
+
+static int
+pci_network_attach(struct pci_func *pcif)
+{
+	pci_func_enable(pcif);
+
+	cprintf("Mapping va 0x%08x to phys 0x%08x size = %d (0x%x)\n", NETMEMBASE, pcif->reg_base[0], pcif->reg_size[0], pcif->reg_size[0]);
+
+	// Remove the original mapping at the region, if any
+	boot_unmap_region(kern_pgdir, NETMEMBASE, ROUNDUP(pcif->reg_size[0], PGSIZE));
+
+	boot_map_region(kern_pgdir, NETMEMBASE,
+															ROUNDUP(pcif->reg_size[0], PGSIZE*1024),
+															pcif->reg_base[0],
+															PTE_W|PTE_PCD|PTE_PWT);
+
+
+	e1000 = (uint32_t*)NETMEMBASE;
+
+	e1000_init_tx_desc_arr();
+	e1000_init_rx_desc_arr();
+
+	cprintf("Check 0x%08x\n", e1000[E1000_INDEX(E1000_STATUS)]);
+
+	// Set up TX queue
+	e1000[E1000_INDEX(E1000_TDBAL)] = PADDR((void*)tx_desc_arr);
+	e1000[E1000_INDEX(E1000_TDLEN)] = E1000_NUM_DESC*sizeof(struct tx_desc);
+	e1000[E1000_INDEX(E1000_TDH)] = 0x00;
+	e1000[E1000_INDEX(E1000_TDT)] = 0x00;
+
+	// Enable TX
+	e1000[E1000_INDEX(E1000_TCTL)]  |= E1000_TCTL_EN_FLAG;
+	e1000[E1000_INDEX(E1000_TCTL)]  |= E1000_TCTL_PSP_FLAG;
+	e1000[E1000_INDEX(E1000_TCTL)]  |= E1000_TCTL_CT_DEFAULT;
+	e1000[E1000_INDEX(E1000_TCTL)]  |= E1000_TCTL_COLD_FULLD;
+	
+	e1000[E1000_INDEX(E1000_TIPG)]  = E1000_TIPG_IEEE8023_DEFAULT;
+
+	// Set up RX queue
+	e1000[E1000_INDEX(E1000_RDBAL)] = PADDR((void*)rx_desc_arr);
+	e1000[E1000_INDEX(E1000_RDLEN)] = E1000_NUM_DESC*sizeof(struct rx_desc);
+	e1000[E1000_INDEX(E1000_RDH)] = 0x00;
+	e1000[E1000_INDEX(E1000_RDT)] = E1000_NUM_DESC - 1;
+
+	// Set ethernet address for recv
+	uint8_t mac[6];
+	e1000_read_mac(mac);
+	e1000[E1000_INDEX(E1000_RAL)] = mac[3] << 24 | 
+																  mac[2] << 16 | 
+																	mac[1] << 8 | 
+																	mac[0];
+	e1000[E1000_INDEX(E1000_RAH)] = mac[5]<<8 | mac[4] | E1000_RAH_AV;
+	//e1000[E1000_INDEX(E1000_RAL)] = 0x12005452;
+	//e1000[E1000_INDEX(E1000_RAH)] = 0x5634 | E1000_RAH_AV;
+
+	// Enable RX
+	e1000[E1000_INDEX(E1000_RCTL)] = E1000_RCTL_EN_FLAG |
+																	 E1000_RCTL_BSIZE_256 |
+																	 E1000_RCTL_BSEX |
+																	 E1000_RCTL_SECRC;
+
+
 	return 1;
 }
 

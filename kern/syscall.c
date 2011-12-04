@@ -16,6 +16,8 @@
 
 #include <kern/e1000.h>
 
+#define no_sleep_send 0
+
 
 // Print a string to the system console.
 // The string is exactly 'len' characters long.
@@ -426,6 +428,11 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 	// Make sure env receiving
 	if (!env->env_ipc_recving)
 	{
+
+#if no_sleep_send == 1
+		return -E_IPC_NOT_RECV;
+#endif
+
 		// CHALLENGE: If the env is not receiving, set up
 		// send fields in our env and sleep for response.
 		// Note: The receiver now has the responsibility to
@@ -506,6 +513,9 @@ sys_ipc_recv(void *dstva)
 	// LAB 4 CHALLENGE: Check if another env has queued a send to us
 	// If they do, receive it and return, short circuiting on the first
 	// received
+	
+	
+#if no_sleep_send == 0
 	
 	// i keeps track of the last index received from
 	static int i = 0;
@@ -595,7 +605,7 @@ sys_ipc_recv(void *dstva)
 			return 0;
 		}
 	}
-	
+#endif
 
 	curenv->env_ipc_recving = 1;
 	curenv->env_status = ENV_NOT_RUNNABLE;

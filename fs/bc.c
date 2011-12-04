@@ -206,7 +206,6 @@ block_cache_evict()
 	assert(cache.head);
 
 	struct BlockCacheEntry *ent = cache.head;
-	//cprintf("Evicting block %d\n", ent->blockno);
 
 	// Remove the block from the cache
 	block_cache_remove(ent);
@@ -309,6 +308,10 @@ bc_pgfault(struct UTrapframe *utf)
 	// Read the data into the page we allocated
 	ide_read(blockno * BLKSECTS, ROUNDDOWN(addr, PGSIZE), BLKSECTS);
 
+	// Clear dirty and accessed bits for read block
+	sys_page_map(sys_getenvid(), ROUNDDOWN(addr, PGSIZE),
+						   sys_getenvid(), ROUNDDOWN(addr, PGSIZE),
+							 va_get_pte(addr) & PTE_SYSCALL & ~PTE_D & ~PTE_A);
 
 	// Check that the block we read was allocated. (exercise for
 	// the reader: why do we do this *after* reading the block

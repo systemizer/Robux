@@ -107,7 +107,8 @@ KERN_BINFILES +=	user/testpteshare \
 			user/testshell
 
 # Binary files for Project
-KERN_BINFILES += security/secserv
+KERN_BINFILES += security/secserv \
+			user/testsec
 
 KERN_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(KERN_SRCFILES))
 KERN_OBJFILES := $(patsubst %.S, $(OBJDIR)/%.o, $(KERN_OBJFILES))

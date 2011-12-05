@@ -394,6 +394,7 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 		// Check if srcva < UTOP but not page-aligned
 		if(srcint % PGSIZE != 0)
 		{
+			cprintf("A 0x%x\n", srcint);
 			return -E_INVAL;
 		}
 
@@ -402,6 +403,7 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 			  	 (perm & PTE_U) &&
 			 		!(perm & ~(PTE_P | PTE_U | PTE_AVAIL | PTE_W))))
 		{
+			cprintf("B\n");
 			return -E_INVAL;
 		}
 
@@ -409,12 +411,14 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 		pte_t *pte;
 		if ((srcpage = page_lookup(curenv->env_pgdir, srcva, &pte)) == NULL)
 		{
+			cprintf("C\n");
 			return -E_INVAL;
 		}
 		
 		// Ensure that source and perm are either both RO or W
 		if ((perm & PTE_W) != (*pte & PTE_W))
 		{
+			cprintf("D\n");
 			return -E_INVAL;
 		}
 
@@ -500,6 +504,7 @@ sys_ipc_recv(void *dstva)
 	{
 		if((uint32_t)dstva % PGSIZE != 0)
 		{
+			cprintf("recv: bad va: 0x%08x\n", dstva);
 			return -E_INVAL;
 		}
 		curenv->env_ipc_dstva = dstva;

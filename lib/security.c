@@ -5,27 +5,29 @@
 
 static envid_t secenv = 0;
 
-static union secipc_buffer sec_send __attribute__((aligned(PGSIZE)));
 
-static struct user_info sec_resp __attribute__((aligned(PGSIZE)));
+static union secipc_buffer *sec_send = (union secipc_buffer *)0x10000000;
+static struct user_info *sec_resp = (struct user_info *)0x10001000;
 
 int get_user_by_id(uid_t uid, struct user_info *user_info)
 {
 	if(secenv == 0)
 		secenv = ipc_find_env(ENV_TYPE_SECURITY);
 
-	sec_send.uid_req.uid = uid;
-	ipc_send(secenv, NAME2INFO, &sec_send, PTE_P | PTE_U);
-
+	sys_page_alloc(0, sec_send, PTE_W | PTE_U | PTE_P);
+	sec_send->uid_req.uid = uid;
+	ipc_send(secenv, NAME2INFO, sec_send, PTE_P | PTE_U | PTE_W);
+	
 	envid_t from = 0;
 	while(from != secenv)
 	{
-		int r = ipc_recv(&from, &sec_resp, NULL);
+		int r = ipc_recv(&from, sec_resp, NULL);
 		if(r < 0)
 			return r;
 	}
 
-	memmove(user_info, &sec_resp, sizeof(user_info)); 
+	memmove(user_info, sec_resp, sizeof(user_info)); 
+	sys_page_unmap(0, sec_resp);
 
 	return 0;
 }

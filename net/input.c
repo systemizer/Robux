@@ -40,6 +40,7 @@ retry:
 	}
 	if(r == -E_NET_NOT_RECV)
 	{
+		sys_yield();
 		goto retry;
 	}
 

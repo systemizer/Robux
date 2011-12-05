@@ -44,6 +44,9 @@ KERN_SRCFILES +=	kern/e100.c \
 			kern/pci.c \
 			kern/time.c
 
+# Source files for final project
+KERN_SRCFILES +=   	login/login.c
+
 # Only build files if they exist.
 KERN_SRCFILES := $(wildcard $(KERN_SRCFILES))
 

@@ -115,7 +115,7 @@ all:
 # make it so that no intermediate .o files are ever deleted
 .PRECIOUS: %.o $(OBJDIR)/boot/%.o $(OBJDIR)/kern/%.o \
 	   $(OBJDIR)/lib/%.o $(OBJDIR)/fs/%.o $(OBJDIR)/net/%.o \
-	   $(OBJDIR)/user/%.o $(OBJDIR)/security/%.o
+	   $(OBJDIR)/user/%.o $(OBJDIR)/security/%.o $(OBJDIR)/login/%.o
 
 KERN_CFLAGS := $(CFLAGS) -DJOS_KERNEL -gstabs
 USER_CFLAGS := $(CFLAGS) -DJOS_USER -gstabs
@@ -138,7 +138,8 @@ include lib/Makefrag
 include user/Makefrag
 include fs/Makefrag
 include net/Makefrag
-include security/Makefrag
+#include security/Makefrag
+include login/Makefrag
 
 
 CPUS ?= 1

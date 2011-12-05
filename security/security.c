@@ -5,7 +5,6 @@
 void 
 do_security()
 {
-	ipc_recv
 }
 
 
@@ -13,6 +12,8 @@ void
 umain(int argc, char *argv[])
 {
 	binaryname="security";
+
+	cprintf("Security server running\n");
 
 	do_security();
 

@@ -74,8 +74,10 @@ i386_init(void)
 	ENV_CREATE(net_ns, ENV_TYPE_NS);
 #endif
 
+
 	ENV_CREATE(security_secserv, ENV_TYPE_USER);
 	ENV_CREATE(login_loginserv,ENV_TYPE_USER);
+
 
 #if defined(TEST)
 	// Don't touch -- used by grading script!

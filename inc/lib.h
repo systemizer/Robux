@@ -22,6 +22,7 @@
 #include <inc/args.h>
 #include <inc/malloc.h>
 #include <inc/ns.h>
+#include <inc/security.h>
 
 #define USED(x)		(void)(x)
 
@@ -142,6 +143,11 @@ int	pipeisclosed(int pipefd);
 
 // wait.c
 void	wait(envid_t env);
+
+// security.c
+int get_user_by_id(uid_t, struct user_info*);
+int get_user_by_name(char*, struct user_info*);
+int verify_password(uid_t, char *pass);
 
 /* File open modes */
 #define	O_RDONLY	0x0000		/* open for reading only */

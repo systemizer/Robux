@@ -1,19 +1,25 @@
 #include <inc/lib.h>
 
 
-void 
-do_security()
-{
-	cprintf("it has built!");
-}
+/* result bits from security env */
+#define AUTH 0x1
+
+/* end result bits from security env */
+
+void login(void);
+
+struct LoginToken {
+	char *username;
+	char *password;
+};
 
 
 void 
 umain(int argc, char *argv[])
 {
 	binaryname="login";
+	cprintf("login server!!\n");
 
-	do_security();
 
 	exit();
 }
@@ -26,7 +32,7 @@ umain(int argc, char *argv[])
 /* #include <inc/env.h> */
 
 /* #include <kern/pmap.h> */
-/* #include <kern/login.h> */
+
 
 /* #include <security/security.h> */
 

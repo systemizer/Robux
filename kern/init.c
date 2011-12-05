@@ -16,7 +16,6 @@
 #include <kern/spinlock.h>
 #include <kern/time.h>
 #include <kern/pci.h>
-#include <kern/login.h>
 
 static void boot_aps(void);
 
@@ -76,6 +75,7 @@ i386_init(void)
 #endif
 
 	ENV_CREATE(security_secserv, ENV_TYPE_USER);
+	ENV_CREATE(login_loginserv,ENV_TYPE_USER);
 
 #if defined(TEST)
 	// Don't touch -- used by grading script!
@@ -84,7 +84,7 @@ i386_init(void)
 	// Touch all you want.
 	ENV_CREATE(user_icode, ENV_TYPE_USER);
 #endif // TEST*
-	login();
+
 	// Should not be necessary - drains keyboard because interrupt has given up.
 	kbd_intr();
 

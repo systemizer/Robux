@@ -138,7 +138,7 @@ include lib/Makefrag
 include user/Makefrag
 include fs/Makefrag
 include net/Makefrag
-#include security/Makefrag
+include security/Makefrag
 include login/Makefrag
 
 

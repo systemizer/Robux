@@ -199,3 +199,15 @@ sys_get_mac_addr(uint8_t buf[6])
 {
 	return syscall(SYS_get_mac_addr, 0, (uint32_t) buf, 0, 0, 0, 0);
 }
+
+int
+sys_get_env_user_id(uid_t *uid)
+{
+	return syscall(SYS_get_env_user_id,0,(uint32_t)uid,0,0,0,0);
+}
+
+int 
+sys_set_user_id(uid_t uid)
+{
+	return syscall(SYS_set_user_id,0,(uint32_t)uid,0,0,0,0);
+}

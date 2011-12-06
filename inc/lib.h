@@ -66,6 +66,8 @@ unsigned int sys_time_msec(void);
 int sys_net_send_packet(void*, uint16_t);
 int sys_net_recv_packet(void*);
 int sys_get_mac_addr(uint8_t [6]);
+int sys_set_user_id(uid_t uid);
+int sys_get_env_user_id(uid_t *uid);
 
 // This must be inlined.  Exercise for reader: why?
 static __inline envid_t __attribute__((always_inline))

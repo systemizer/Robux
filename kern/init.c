@@ -30,6 +30,8 @@ i386_init(void)
 	// This ensures that all static/global variables start out zero.
 	memset(edata, 0, end - edata);
 
+
+
 	// Initialize the console.
 	// Can't call cprintf until after we do this!
 	cons_init();
@@ -75,7 +77,7 @@ i386_init(void)
 #endif
 
 
-	ENV_CREATE(security_secserv, ENV_TYPE_USER);
+	//ENV_CREATE(security_secserv, ENV_TYPE_USER);
 	ENV_CREATE(login_loginserv,ENV_TYPE_USER);
 
 
@@ -84,7 +86,7 @@ i386_init(void)
 	ENV_CREATE(TEST, ENV_TYPE_USER);
 #else
 	// Touch all you want.
-	ENV_CREATE(user_icode, ENV_TYPE_USER);
+	//ENV_CREATE(user_icode, ENV_TYPE_USER);
 #endif // TEST*
 
 	// Should not be necessary - drains keyboard because interrupt has given up.

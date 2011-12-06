@@ -46,7 +46,7 @@ static void
 prompt_login(void)
 {
 	char *buf;
-	buf = readline("username: ");
+	username = readline("username: ");
 	cprintf("username - %s\n",buf);
 	strcpy(username,buf);
 	buf= readline("password: ");
@@ -75,19 +75,21 @@ login(void)
 	if ((r=login_init())<0)
 		panic("Error: failed to initialize login environment\n");
 
+		       
 	// Wait for the console to calm down
 	int i;
 	for (i = 0; i < 100; i++)
 		sys_yield();
 
-	cprintf("starting auth loop\n");
+	char * buf;
 	while (1)
 	{
-		cprintf("prompting for login\n");
-		prompt_login();
-		if (authenticate()>=0) {
-			cprintf("authentication complete! Going to user environment\n");
-		}
+		buf = readline("username: ");
+		memmove(username,buf,strlen(buf));
+		buf = readline("password: ");
+		memmove(password,buf,strlen(buf));
+		cprintf("password - %s",password);
+		cprintf("username - %s",username);
 	}
 		
 }

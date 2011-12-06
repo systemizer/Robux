@@ -57,7 +57,7 @@ int get_user_by_id(uid_t uid, struct user_info *user_info)
 	if(r < 0)
 		return r;
 
-	memmove(user_info, sec_resp, sizeof(user_info)); 
+	memmove(user_info, sec_resp, sizeof(struct user_info)); 
 	sys_page_unmap(0, sec_resp);
 
 	return 0;
@@ -76,7 +76,7 @@ int get_user_by_name(char *name, struct user_info *user_info)
 	if(r < 0)
 		return r;
 
-	memmove(user_info, sec_resp, sizeof(user_info));
+	memmove(user_info, sec_resp, sizeof(struct user_info));
 	sys_page_unmap(0, sec_resp);
 
 	return 0;

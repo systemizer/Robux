@@ -287,3 +287,51 @@ strtol(const char *s, char **endptr, int base)
 	return (neg ? -val : val);
 }
 
+
+
+int 
+atoi(const char *str)
+{
+	int len = strlen(str);
+	int ret = 0;
+
+	// Set end to index one past last contiguous digit
+	int end;
+	for(end = 0; end < len; end++)
+	{
+		char c = str[end];
+		switch(c)
+		{
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+			case '0':
+				continue;
+			default:
+				end++;
+				break;
+		
+		}
+	}
+
+	int i;
+	for(i=1; i <= end; i++)
+	{
+		int c = str[end-i] - '0';
+
+		int mult;
+		for(mult = 0; mult < (i-1); mult++)
+			c *= 10;
+
+		ret += c;
+	}
+
+	return ret;
+}
+

@@ -28,6 +28,7 @@ typedef uint16_t fsperm_t;
 struct user_info
 {
 	char ui_name[NAME_LEN];
+	char ui_pass[PASS_LEN]; // Security server zeroes this before returning
 	uid_t ui_uid;
 	gid_t ui_gid;
 	char ui_comment[COMMENT_LEN];

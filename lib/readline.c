@@ -6,7 +6,7 @@ static char buf[BUFLEN];
 
 
 char *
-readline_full(const char *prompt,int echo_override)
+readline_full(const char *prompt, int no_echo)
 {
 	int i, c, echoing;
 
@@ -19,9 +19,9 @@ readline_full(const char *prompt,int echo_override)
 #endif
 
 	i = 0;
-	echoing = 0;
-	if (echo_override)
-		echoing = echo_override;
+	echoing = iscons(1);
+	if (no_echo)
+		echoing = 0;
 
 	while (1) {
 		c = getchar();

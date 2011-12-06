@@ -38,10 +38,12 @@ login(void)
 
 	while (1)
 	{
-		buf = readline_full("\nusername:",1);
+		buf = readline("\nusername: ");
 		strncpy(username,buf,NAME_LEN);
-		buf = readline("\npassword:");
+		buf = readline_full("password: ", 1);
 		strncpy(password,buf,PASS_LEN);
+		printf("\n");
+		
 		uid = get_user_by_name(username, &info);
 
 		if(uid != 0) {

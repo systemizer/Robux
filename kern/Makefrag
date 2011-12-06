@@ -109,8 +109,8 @@ KERN_BINFILES +=	user/testpteshare \
 
 # Binary files for Project
 KERN_BINFILES += security/secserv \
-	         login/loginserv \
-		 user/testsec
+		 user/testsec \
+		 user/login
 
 
 KERN_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(KERN_SRCFILES))

@@ -42,7 +42,9 @@ void	exit(void);
 void	set_pgfault_handler(void (*handler)(struct UTrapframe *utf));
 
 // readline.c
+char*	readline_full(const char *buf,int echo_override);
 char*	readline(const char *buf);
+
 
 // syscall.c
 void	sys_cputs(const char *string, size_t len);

@@ -76,9 +76,10 @@ i386_init(void)
 	ENV_CREATE(net_ns, ENV_TYPE_NS);
 #endif
 
+	//start security server
+	ENV_CREATE(security_secserv, ENV_TYPE_SECURITY);
 
-	//ENV_CREATE(security_secserv, ENV_TYPE_USER);
-	ENV_CREATE(login_loginserv,ENV_TYPE_USER);
+
 
 
 #if defined(TEST)

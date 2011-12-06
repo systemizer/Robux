@@ -4,8 +4,9 @@
 #define BUFLEN 1024
 static char buf[BUFLEN];
 
+
 char *
-readline(const char *prompt)
+readline_full(const char *prompt,int echo_override)
 {
 	int i, c, echoing;
 
@@ -18,7 +19,10 @@ readline(const char *prompt)
 #endif
 
 	i = 0;
-	echoing = iscons(0);
+	echoing = 0;
+	if (echo_override)
+		echoing = echo_override;
+
 	while (1) {
 		c = getchar();
 		if (c < 0) {
@@ -42,3 +46,8 @@ readline(const char *prompt)
 	}
 }
 
+char *
+readline(const char *prompt)
+{
+	return readline_full(prompt,0);
+}

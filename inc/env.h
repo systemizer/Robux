@@ -78,10 +78,10 @@ struct Env {
 	void *env_ipc_send_srcva;
 	unsigned env_ipc_send_perm;
 
-	//Final Project, user/group id
-	uid_t uid;
-	uid_t gid_t;
-	unsigned user_perm;
+	// Final Project, user/group id
+	uid_t env_uid;
+	gid_t env_gid;
+	unsigned env_user_perm;
 };
 
 #endif // !JOS_INC_ENV_H

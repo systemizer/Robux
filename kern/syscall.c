@@ -98,6 +98,11 @@ sys_exofork(void)
 	// Set status
 	newEnv->env_status = ENV_NOT_RUNNABLE;
 
+	// Copy over security features
+	newEnv->env_uid = curenv->env_uid;
+	newEnv->env_gid = curenv->env_gid;
+	newEnv->env_user_perm = curenv->env_user_perm;
+
 	// Copy over registers, but set eax to 0
 	memmove(&newEnv->env_tf, &curenv->env_tf, sizeof(struct Trapframe));
 	newEnv->env_tf.tf_regs.reg_eax = 0;

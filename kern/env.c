@@ -284,6 +284,10 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 	// Clear IPC send to as well
 	e->env_ipc_send_to = 0;
 
+	e->env_uid = 0;
+	e->env_gid = 0;
+	e->env_user_perm = 0;
+
 	// commit the allocation
 	env_free_list = e->env_link;
 	*newenv_store = e;

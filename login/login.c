@@ -1,111 +1,109 @@
 #include <inc/lib.h>
-
-
-/* result bits from security env */
-#define AUTH 0x1
-
-/* end result bits from security env */
+#include <inc/stdio.h>
+#include <inc/string.h>
+#include <inc/error.h>
+#include <inc/env.h>
+#include <security/security.h>
 
 void login(void);
+int login_init(void);
+static void prompt_login(void);
+static int authenticate(void);
 
-struct LoginToken {
-	char *username;
-	char *password;
-};
+ 
+char *username;
+char *password;
 
+// authenticate takes a username and password and
+// passes it to security, which will check if the
+// combination is valid. authenticate returns the
+// userid if valid, else return -1
+static int
+authenticate(void)
+{
+	envid_t from_envid;
+	envid_t result;
+	cprintf("%s\n",username);
+	cprintf("%s\n",password);
+	/* envid_t sc_envid = ipc_find_env(ENV_TYPE_SC); */
+	/* if (!sc_envid) */
+	/* 	panic("The security server could not be found"); */
+	/* ipc_send(sc_envid,SCREQ_AUTH,&token,PTE_P|PTE_U); */
+	/* result =  ipc_recv(&from_envid,NULL,NULL); */
+	/* while (from_envid!=sc_envid) { */
+	/* 	result = ipc_recv(&from_envid,NULL,NULL); */
+	/* } */
+	/* return result & AUTH; */
+	return 0;
+
+}
+
+//prompts the user for a username and password.
+//users authenticate to log the user into the
+//system. On success, spawn a new environment
+//with the returned userid
+static void
+prompt_login(void)
+{
+	char *buf;
+	buf = readline("username: ");
+	cprintf("username - %s\n",buf);
+	strcpy(username,buf);
+	buf= readline("password: ");
+	cprintf("password - %s",buf);
+	strcpy(password,buf);
+}
+
+int
+login_init(void)
+{
+	int r;
+	if ((r=sys_page_alloc(0,username,PTE_U|PTE_W|PTE_P))<0)
+		return r;
+	if ((r=sys_page_alloc(0,password,PTE_U|PTE_W|PTE_P))<0)
+		return r;
+	return 0;
+}
+			
+	
+
+void
+login(void)
+{
+	int r;
+	cprintf("initializing environment\n");
+	if ((r=login_init())<0)
+		panic("Error: failed to initialize login environment\n");
+
+	// Wait for the console to calm down
+	int i;
+	for (i = 0; i < 100; i++)
+		sys_yield();
+
+	cprintf("starting auth loop\n");
+	while (1)
+	{
+		cprintf("prompting for login\n");
+		prompt_login();
+		if (authenticate()>=0) {
+			cprintf("authentication complete! Going to user environment\n");
+		}
+	}
+		
+}
 
 void 
 umain(int argc, char *argv[])
 {
+
 	binaryname="login";
-	cprintf("login server!!\n");
 
 
+	close(0);
+	close(1);
+	opencons();
+	opencons();
+
+	login();
 	exit();
 }
-
-
-/* #include <inc/stdio.h> */
-/* #include <inc/string.h> */
-/* #include <inc/error.h> */
-
-/* #include <inc/env.h> */
-
-/* #include <kern/pmap.h> */
-
-
-/* #include <security/security.h> */
-
-/* struct LoginToken token; */
-
-/* // authenticate takes a username and password and  */
-/* // passes it to security, which will check if the */
-/* // combination is valid. authenticate returns the  */
-/* // userid if valid, else return -1 */
-/* static int */
-/* authenticate(void)  */
-/* { */
-/* 	envid_t from_envid; */
-/* 	envid_t result; */
-/* 	//cprintf("%s\n",token.username); */
-/* 	//cprintf("%s\n",token.password); */
-/* 	envid_t sc_envid = ipc_find_env(ENV_TYPE_SC); */
-/* 	if (!sc_envid) */
-/* 		panic("The security server could not be found"); */
-/* 	ipc_send(sc_envid,SCREQ_AUTH,&token,PTE_P|PTE_U);		 */
-/* 	result =  ipc_recv(&from_envid,NULL,NULL); */
-/* 	while (from_envid!=sc_envid) { */
-/* 		result = ipc_recv(&from_envid,NULL,NULL); */
-/* 	} */
-/* 	return result & AUTH; */
-
-/* } */
-
-/* //prompts the user for a username and password. */
-/* //users authenticate to log the user into the */
-/* //system. On success, spawn a new environment */
-/* //with the returned userid */
-/* static void  */
-/* prompt_login(void) */
-/* { */
-/* 	char *buf; */
-/* 	buf = readline("username: "); */
-/* 	strcpy(token.username,buf); */
-/* 	buf= readline("password: "); */
-/* 	strcpy(token.password,buf); */
-/* } */
-
-/* int */
-/* login_init(void)  */
-/* { */
-/* 	struct Page *upage  = page_alloc(ALLOC_ZERO); */
-/* 	if (!upage) */
-/* 		return -E_NO_MEM; */
-/* 	upage->pp_ref++; */
-/* 	token.username = page2kva(upage); */
-
-/* 	struct Page *ppage  = page_alloc(ALLOC_ZERO); */
-/* 	if (!ppage) */
-/* 		return -E_NO_MEM; */
-/* 	ppage->pp_ref++; */
-/* 	token.password = page2kva(ppage); */
-
-/* 	return 0; */
-/* } */
-			
-	
-
-/* void */
-/* login(void) */
-/* { */
-/* 	login_init(); */
-/* 	while (1)  */
-/* 	{		 */
-/* 		prompt_login(); */
-/* 		if (authenticate()) { */
-/* 			cprintf("authentication complete! Going to user environment"); */
-/* 			//start shell here */
-/* 		} */
-/* 	} */
-		
-/* } */

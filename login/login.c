@@ -3,7 +3,7 @@
 #include <inc/string.h>
 #include <inc/error.h>
 #include <inc/env.h>
-#include <security/security.h>
+#include <inc/security.h>
 
 void login(void);
 int login_init(void);
@@ -58,10 +58,16 @@ int
 login_init(void)
 {
 	int r;
+	/*
 	if ((r=sys_page_alloc(0,username,PTE_U|PTE_W|PTE_P))<0)
 		return r;
 	if ((r=sys_page_alloc(0,password,PTE_U|PTE_W|PTE_P))<0)
 		return r;
+		*/
+
+	username = (char*)malloc(NAME_LEN);
+	password = (char*)malloc(PASS_LEN);
+
 	return 0;
 }
 			
@@ -85,9 +91,9 @@ login(void)
 	while (1)
 	{
 		buf = readline("username: ");
-		memmove(username,buf,strlen(buf));
+		strncpy(username,buf,NAME_LEN);
 		buf = readline("password: ");
-		memmove(password,buf,strlen(buf));
+		strncpy(password,buf,PASS_LEN);
 		cprintf("password - %s",password);
 		cprintf("username - %s",username);
 	}

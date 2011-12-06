@@ -6,6 +6,7 @@
 #include <inc/types.h>
 #include <inc/trap.h>
 #include <inc/memlayout.h>
+#include <inc/security.h>
 
 typedef int32_t envid_t;
 
@@ -76,6 +77,11 @@ struct Env {
 	uint32_t env_ipc_send_value;
 	void *env_ipc_send_srcva;
 	unsigned env_ipc_send_perm;
+
+	//Final Project, user/group id
+	uid_t uid;
+	uid_t gid_t;
+	unsigned user_perm;
 };
 
 #endif // !JOS_INC_ENV_H

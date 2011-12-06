@@ -708,6 +708,22 @@ void syscall_cond_lock(uint32_t syscallno, int lock)
 #endif
 }
 
+int
+sys_get_env_user_id(uid_t *uid)
+{
+	memmove(uid,&curenv->uid,sizeof(uid_t));
+	return 0;
+}
+
+int
+sys_set_user_id(uid_t uid)
+{
+	if (curenv->uid!=0)
+		return -E_BAD_ENV;
+	curenv->uid = uid;
+	return 0;
+}
+
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -757,8 +773,15 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 			break;
 		case SYS_ipc_try_send:
 			ret = sys_ipc_try_send((envid_t)a1, (uint32_t)a2, 
-														 (void*)a3, (unsigned) a4);
+					       (void*)a3, (unsigned) a4);
 			break;
+	        case SYS_set_user_id:
+			ret = sys_set_user_id((uid_t)a1);
+			break;
+	        case SYS_get_env_user_id:
+			ret = sys_get_env_user_id((uid_t *)a1);
+			break;
+ 
 		case SYS_ipc_recv:
 			ret = sys_ipc_recv((void*)a1);
 			break;
@@ -777,6 +800,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		case SYS_get_mac_addr:
 			ret = sys_get_mac_addr((uint8_t*)a1);
 			break;
+
+
 		default:
 			ret = -E_INVAL;
 			break;

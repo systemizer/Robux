@@ -21,6 +21,8 @@ enum {
 	SYS_net_send_packet,
 	SYS_net_recv_packet,
 	SYS_get_mac_addr,
+	SYS_get_env_user_id,
+	SYS_set_user_id,
 	NSYSCALLS
 };
 

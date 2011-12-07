@@ -4,6 +4,7 @@ int flag[256];
 
 void lsdir(const char*, const char*);
 void ls1(const char*, bool, off_t, const char*);
+void ls2(const char *prefix, struct Stat *f);
 
 void
 ls(const char *path, const char *prefix)
@@ -16,7 +17,7 @@ ls(const char *path, const char *prefix)
 	if (st.st_isdir && !flag['d'])
 		lsdir(path, prefix);
 	else
-		ls1(0, st.st_isdir, st.st_size, path);
+		ls2(0, &st); 
 }
 
 void
@@ -29,11 +30,53 @@ lsdir(const char *path, const char *prefix)
 		panic("open %s: %e", path, fd);
 	while ((n = readn(fd, &f, sizeof f)) == sizeof f)
 		if (f.f_name[0])
-			ls1(prefix, f.f_type==FTYPE_DIR, f.f_size, f.f_name);
+		{
+			struct Stat st;
+			stat(f.f_name, &st);
+			ls2(prefix, &st);
+		}
 	if (n > 0)
 		panic("short read in directory %s", path);
 	if (n < 0)
 		panic("error reading directory %s: %e", path, n);
+}
+
+
+void
+ls2(const char *prefix, struct Stat *f)
+{
+	if(flag['l'])
+	{
+		printf("-%c%c%c%c%c%c%c%c%c ",
+				(f->st_perm & FSP_O_R) ? 'r':'-',
+				(f->st_perm & FSP_O_W) ? 'w':'-',
+				(f->st_perm & FSP_O_X) ? 'x':'-',
+				(f->st_perm & FSP_G_R) ? 'r':'-',
+				(f->st_perm & FSP_G_W) ? 'w':'-',
+				(f->st_perm & FSP_G_X) ? 'x':'-',
+				(f->st_perm & FSP_A_R) ? 'r':'-',
+				(f->st_perm & FSP_A_W) ? 'w':'-',
+				(f->st_perm & FSP_A_X) ? 'x':'-');
+
+		struct user_info info;
+		int r = get_user_by_id(f->st_uid, &info);
+		if(r < 0)
+			printf("%d ", f->st_uid);
+		else
+			printf("%s ", info.ui_name); 
+
+		printf("%d %11d %s\n", f->st_gid, f->st_size, f->st_name);
+	}
+	else
+	{
+		char *sep;
+		if(prefix[0] && prefix[strlen(prefix)-1] != '/')
+			sep = "/";
+		else
+			sep = "";
+
+		printf("%s%s%s\n", prefix, sep, f->st_name); 
+	}
 }
 
 void

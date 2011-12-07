@@ -21,8 +21,6 @@ read_passwd(char **ret, uint32_t *sizeret)
 		fstat(fd, &stat);
 		uint32_t size = stat.st_size;
 
-		cprintf("Passwd is %d bytes\n", size);
-
 		// Make room for the file, plus null byte
 		*ret = malloc(size+1);
 

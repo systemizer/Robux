@@ -43,20 +43,25 @@ static const char * const error_string[MAXERROR] =
 /*
  * Print a number (base <= 16) in reverse order,
  * using specified putch function and associated pointer putdat.
+ *
+ * This has been modified to take negative numbers into account itself
  */
 static void
 printnum(void (*putch)(int, void*), void *putdat,
-	 unsigned long long num, unsigned base, int width, int padc)
+	 unsigned long long num, unsigned base, int width, int padc, int neg)
 {
 	// first recursively print all preceding (more significant) digits
 	if (num >= base) {
-		printnum(putch, putdat, num / base, base, width - 1, padc);
+		printnum(putch, putdat, num / base, base, width - 1, padc, neg);
+		neg = 0;
 	} else {
 		// print any needed pad characters before first digit
-		while (--width > 0)
+		while (--width > neg)
 			putch(padc, putdat);
 	}
 
+	if(neg)
+		putch('-', putdat);
 	// then print this (the least significant) digit
 	putch("0123456789abcdef"[num % base], putdat);
 }
@@ -99,6 +104,7 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 	unsigned long long num;
 	int base, lflag, width, precision, altflag;
 	char padc;
+	int neg = 0;
 
 	while (1) {
 		while ((ch = *(unsigned char *) fmt++) != '%') {
@@ -203,7 +209,7 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 		case 'd':
 			num = getint(&ap, lflag);
 			if ((long long) num < 0) {
-				putch('-', putdat);
+				neg = 1;
 				num = -(long long) num;
 			}
 			base = 10;
@@ -241,7 +247,7 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 			num = getuint(&ap, lflag);
 			base = 16;
 		number:
-			printnum(putch, putdat, num, base, width, padc);
+			printnum(putch, putdat, num, base, width, padc, neg);
 			break;
 
 		// escaped '%' character

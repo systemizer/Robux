@@ -13,7 +13,10 @@ ls(const char *path, const char *prefix)
 	struct Stat st;
 
 	if ((r = stat(path, &st)) < 0)
-		panic("stat %s: %e", path, r);
+	{
+		printf("stat %s: %e\n", path, r);
+		return;
+	}
 	if (st.st_isdir && !flag['d'])
 		lsdir(path, prefix);
 	else
@@ -32,7 +35,13 @@ lsdir(const char *path, const char *prefix)
 		if (f.f_name[0])
 		{
 			struct Stat st;
-			stat(f.f_name, &st);
+			int r;
+			if((r = stat(f.f_name, &st)) < 0)
+			{
+				memset(&st, 0, sizeof(st));
+				strncpy(st.st_name, f.f_name, MAXNAMELEN);
+				st.st_size = r;
+			}
 			ls2(prefix, &st);
 		}
 	if (n > 0)

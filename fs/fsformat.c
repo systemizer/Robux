@@ -115,6 +115,11 @@ opendisk(const char *name)
 	super->s_root.f_type = FTYPE_DIR;
 	strcpy(super->s_root.f_name, "/");
 
+	super->s_root.f_uid = 0;
+	super->s_root.f_gid = 0;
+	super->s_root.f_perm = DEFAULT_DIR_CREATE_PERM;
+
+
 	nbitblocks = (nblocks + BLKBITSIZE - 1) / BLKBITSIZE;
 	bitmap = alloc(nbitblocks * BLKSIZE);
 	memset(bitmap, 0xFF, nbitblocks * BLKSIZE);
@@ -164,6 +169,14 @@ diradd(struct Dir *d, uint32_t type, const char *name)
 		panic("too many directory entries");
 	strcpy(out->f_name, name);
 	out->f_type = type;
+	out->f_uid = 0;
+	out->f_gid = 0;
+	if(type == FTYPE_DIR)
+		out->f_perm = DEFAULT_DIR_CREATE_PERM;
+	else if(strcmp(name, "testkbd") != 0)
+		out->f_perm = DEFAULT_FILE_CREATE_PERM;
+	else
+		out->f_perm = 0;
 	return out;
 }
 

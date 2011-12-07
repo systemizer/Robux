@@ -34,6 +34,8 @@ USERAPPS :=		$(USERAPPS) \
 			$(OBJDIR)/user/testshell \
 			$(OBJDIR)/user/logname \
 			$(OBJDIR)/user/testsec \
+			$(OBJDIR)/user/login \
+			$(OBJDIR)/user/telnetd \
 			$(OBJDIR)/user/testmalloc 
 
 FSIMGTXTFILES :=	$(FSIMGTXTFILES) \

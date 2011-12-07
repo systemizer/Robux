@@ -37,7 +37,10 @@ readline_full(const char *prompt, int no_echo)
 			if (echoing)
 				cputchar(c);
 			buf[i++] = c;
-		} else if (c == '\n' || c == '\r') {
+
+		} else if(c == '\r') {
+			continue;
+		} else if (c == '\n') {
 			if (echoing)
 				cputchar('\n');
 			buf[i] = 0;

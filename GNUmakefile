@@ -144,6 +144,7 @@ CPUS ?= 1
 
 PORT7	:= $(shell expr $(GDBPORT) + 1)
 PORT80	:= $(shell expr $(GDBPORT) + 2)
+PORT23	:= $(shell expr $(GDBPORT) + 3)
 
 QEMUOPTS = -hda $(OBJDIR)/kern/kernel.img -serial mon:stdio -gdb tcp::$(GDBPORT)
 QEMUOPTS += $(shell if $(QEMU) -nographic -help | grep -q '^-D '; then echo '-D qemu.log'; fi)
@@ -152,7 +153,7 @@ QEMUOPTS += -smp $(CPUS)
 QEMUOPTS += -hdb $(OBJDIR)/fs/fs.img
 IMAGES += $(OBJDIR)/fs/fs.img
 QEMUOPTS += -net user -net nic,model=e1000,macaddr=52:54:00:AA:13:37 -redir tcp:$(PORT7)::7 \
-	   -redir tcp:$(PORT80)::80 -redir udp:$(PORT7)::7 -net dump,file=qemu.pcap
+	-redir tcp:$(PORT80)::80 -redir udp:$(PORT7)::7 -redir tcp:$(PORT23)::23 -net dump,file=qemu.pcap
 QEMUOPTS += $(QEMUEXTRA)
 
 .gdbinit: .gdbinit.tmpl
@@ -256,6 +257,7 @@ run-%: prep-% pre-qemu
 which-ports:
 	@echo "Local port $(PORT7) forwards to JOS port 7 (echo server)"
 	@echo "Local port $(PORT80) forwards to JOS port 80 (web server)"
+	@echo "Local port $(PORT23) forwards to JOS port 23 (telnetd)"
 
 nc-80:
 	nc localhost $(PORT80)
@@ -263,11 +265,17 @@ nc-80:
 nc-7:
 	nc localhost $(PORT7)
 
+nc-23:
+	nc localhost $(PORT23)
+
 telnet-80:
 	telnet localhost $(PORT80)
 
 telnet-7:
 	telnet localhost $(PORT7)
+
+telnet-23:
+	telnet localhost $(PORT23)
 
 # This magic automatically generates makefile dependencies
 # for header files included from C source files we compile,

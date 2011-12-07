@@ -166,6 +166,18 @@ close_all(void)
 		close(i);
 }
 
+
+int
+isopen(int fd)
+{
+	struct Fd *fdsave;
+	int r = fd_lookup(fd, &fdsave);
+	if(r < 0)
+		return 0;
+	else
+		return 1;
+}
+
 // Make file descriptor 'newfdnum' a duplicate of file descriptor 'oldfdnum'.
 // For instance, writing onto either file descriptor will affect the
 // file and the file offset of the other.

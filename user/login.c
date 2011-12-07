@@ -5,7 +5,7 @@
 #include <inc/env.h>
 #include <inc/security.h>
 
-void login(void);
+void login(int);
 void login_init(void);
 
 char *username;
@@ -22,7 +22,7 @@ login_init(void)
 }
 			       
 void
-login(void)
+login(int forever)
 {
 	int r,uid;
 	struct user_info info;
@@ -38,16 +38,51 @@ login(void)
 
 	while (1)
 	{
+
 		buf = readline("\nusername: ");
+		if(buf == NULL)
+		{
+			printf("Terminating login\n");
+			exit();
+		}
 		strncpy(username,buf,NAME_LEN);
+
+		// Disable remote echo if not console
+		if(!iscons(1))
+		{
+			char d1 = 0xFF;
+			char d2 = 0xFD;
+			char d3 = 0x2D;
+			write(1, &d1, 1); 
+			write(1, &d2, 1); 
+			write(1, &d3, 1); 
+		}
+
 		buf = readline_full("password: ", 1);
+		if(buf == NULL)
+		{
+			printf("Terminating login\n");
+			exit();
+		}
+
+		// Enable remote echo if not console
+		if(!iscons(1))
+		{
+			char d1 = 0xFF;
+			char d2 = 0xFE;
+			char d3 = 0x2D;
+			write(1, &d1, 1); 
+			write(1, &d2, 1); 
+			write(1, &d3, 1); 
+		}
+
 		strncpy(password,buf,PASS_LEN);
 		printf("\n");
 		
 		r = get_user_by_name(username, &info);
 
 		if(r != 0) {
-			cprintf("No user exists: %s\n", username);
+			printf("No user exists: %s\n", username);
 			continue;
 		}
 
@@ -55,12 +90,17 @@ login(void)
 
 		if(r == 0)
 		{
-			const char *newarg[2];
+			const char *newarg[3];
 			newarg[0] = info.ui_shell;
-			newarg[1] = NULL;
+			newarg[1] = "-i";
+			newarg[2] = NULL;
 			int pid = spawn_full(info.ui_shell, newarg, info.ui_uid, info.ui_gid);
 			if(pid != 0)
+			{
 				wait(pid);
+				if(!forever)
+					exit();
+			}
 		}
 		else
 		{
@@ -77,11 +117,17 @@ umain(int argc, char *argv[])
 	binaryname="login";
 
 
-	close(0);
-	close(1);
-	opencons();
-	opencons();
+	if(!isopen(0) && !isopen(1))
+	{
+		close(0);
+		close(1);
+		opencons();
+		opencons();
+	}
 
-	login();
+	if(argc == 2 && strcmp(argv[1], "-t") == 0)
+		login(0);
+	else
+		login(1);
 	exit();
 }

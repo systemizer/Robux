@@ -23,13 +23,16 @@ send_req(uint32_t num)
 }
 
 int
-wait_resp()
+wait_resp(int page_map)
 {
 	envid_t from = 0;
 	int r = 0;
 	while(from != secenv)
 	{
-		r = ipc_recv(&from, sec_resp, NULL);
+		if(page_map)
+			r = ipc_recv(&from, sec_resp, NULL);
+		else
+			r = ipc_recv(&from, NULL, NULL);
 		if(r < 0)
 			break;
 	}
@@ -53,7 +56,7 @@ int get_user_by_id(uid_t uid, struct user_info *user_info)
 	sec_send->uid_req.uid = uid;
 	send_req(UID2INFO);
 	
-	int r = wait_resp();
+	int r = wait_resp(1);
 	if(r < 0)
 		return r;
 
@@ -72,7 +75,7 @@ int get_user_by_name(char *name, struct user_info *user_info)
 	format_text(sec_send->name_req.name, name, NAME_LEN);
 	send_req(NAME2INFO);
 	
-	int r = wait_resp();
+	int r = wait_resp(1);
 	if(r < 0)
 		return r;
 
@@ -91,6 +94,6 @@ int verify_password(uid_t uid, char *pass)
 	format_text(sec_send->verify_req.pass, pass, PASS_LEN);
 	send_req(VERIFYPASS);
 
-	int r = wait_resp();
+	int r = wait_resp(0);
 	return r;
 }

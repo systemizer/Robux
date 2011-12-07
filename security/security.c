@@ -63,14 +63,15 @@ get_user_arr(struct user_info **arrptr, uint32_t *count_ret)
 	if(passwd == NULL)
 		panic("security: cannot read passwd\n");
 
+
 	int usernum = count_users(passwd, size);
 
 	*arrptr = (struct user_info *) malloc(sizeof(struct user_info) * usernum);
 	
 	// Store each user's line
 	char **lines = (char**)malloc(usernum * sizeof(char*));
-	char *cur = passwd;
-	char *end = strchr(cur, '\n');
+	const char *cur = passwd;
+	const char *end = strchr(cur, '\n');
 	int i = 0;
 	while(end != NULL)
 	{
@@ -118,7 +119,8 @@ get_user_arr(struct user_info **arrptr, uint32_t *count_ret)
 			cprintf("passwd: no uid\n");
 			continue;
 		}
-		strncpy(tmp_buf, cur, MIN(20, end-cur));
+		memset(tmp_buf, 0, 20);
+		strncpy(tmp_buf, cur, MIN(19, end-cur));
 		ret[retindex].ui_uid = atoi(tmp_buf);
 
 		cur = end+1;
@@ -128,7 +130,8 @@ get_user_arr(struct user_info **arrptr, uint32_t *count_ret)
 			cprintf("passwd: no gid\n");
 			continue;
 		}
-		strncpy(tmp_buf, cur, MIN(20, end-cur));
+		memset(tmp_buf, 0, 20);
+		strncpy(tmp_buf, cur, MIN(19, end-cur));
 		ret[retindex].ui_gid = atoi(tmp_buf);
 
 		cur = end+1;
@@ -226,8 +229,6 @@ recv_loop()
 		{
 			case NAME2INFO:
 
-				if(sys_page_alloc(0, reply_buf, PTE_P | PTE_U | PTE_W) < 0)
-					panic("security: failed to alloc reply page\n");
 				
 				if(req_user == NULL)
 				{
@@ -235,6 +236,9 @@ recv_loop()
 					break;
 				}
 
+				if(sys_page_alloc(0, reply_buf, PTE_P | PTE_U | PTE_W) < 0)
+					panic("security: failed to alloc reply page\n");
+				
 				// Copy user info into send buf, but clear out password field
 				memmove(reply_buf, req_user, sizeof(struct user_info));
 				memset(reply_buf->ui_pass, 0, PASS_LEN);
@@ -246,13 +250,10 @@ recv_loop()
 
 				if(req_user == NULL)
 				{
-					cprintf("Searched uid %d, not found\n", request_buf->uid_req.uid);
 					ipc_send(from, -E_USER_NOT_FOUND, NULL, 0);
 					break;
 				}
 				
-				cprintf("Searched uid %d, found %s\n", request_buf->uid_req.uid, req_user->ui_name);
-
 				if(sys_page_alloc(0, reply_buf, PTE_P | PTE_U | PTE_W) < 0)
 					panic("security: failed to alloc reply page\n");
 

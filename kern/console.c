@@ -409,7 +409,7 @@ cons_intr(int (*proc)(void))
 	while ((c = (*proc)()) != -1) {
 		if (c == 0)
 			continue;
-		cons.buf[cons.wpos++] = c;
+		cons.buf[cons.wpos++] = (c == '\r')?'\n':c;
 		if (cons.wpos == CONSBUFSIZE)
 			cons.wpos = 0;
 	}

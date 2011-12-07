@@ -20,6 +20,11 @@ libmain(int argc, char **argv)
 	if (argc > 0)
 		binaryname = argv[0];
 
+	if(!isopen(0) && !isopen(1))
+	{
+		opencons();
+		opencons();
+	}
 	// call user main routine
 	umain(argc, argv);
 

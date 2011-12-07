@@ -5,6 +5,7 @@
 
 #include <inc/types.h>
 #include <inc/mmu.h>
+#include <inc/security.h>
 
 // File nodes (both in-memory and on-disk)
 
@@ -36,9 +37,13 @@ struct File {
 	uint32_t f_direct[NDIRECT];	// direct blocks
 	uint32_t f_indirect;		// indirect block
 
+	uid_t f_uid;			// owner uid
+	gid_t f_gid;			// group gid
+	fsperm_t f_perm;	// file permissions
+
 	// Pad out to 256 bytes; must do arithmetic in case we're compiling
 	// fsformat on a 64-bit machine.
-	uint8_t f_pad[256 - MAXNAMELEN - 8 - 4*NDIRECT - 4];
+	uint8_t f_pad[256 - MAXNAMELEN - 8 - 4*NDIRECT - 4 - sizeof(uid_t) - sizeof(gid_t) - sizeof(fsperm_t) ];
 } __attribute__((packed));	// required only on some 64-bit machines
 
 // An inode block contains exactly BLKFILES 'struct File's
@@ -101,6 +106,9 @@ union Fsipc {
 		char ret_name[MAXNAMELEN];
 		off_t ret_size;
 		int ret_isdir;
+		uid_t ret_uid;
+		gid_t ret_gid;
+		fsperm_t ret_perm;
 	} statRet;
 	struct Fsreq_flush {
 		int req_fileid;

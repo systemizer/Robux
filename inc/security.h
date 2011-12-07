@@ -1,5 +1,5 @@
-#ifndef JOS_SECURITY_H
-#define JOS_SECURITY_H
+#ifndef JOS_INC_SECURITY_H
+#define JOS_INC_SECURITY_H
 
 
 #define NAME_LEN 32
@@ -8,9 +8,18 @@
 #define COMMENT_LEN 256
 #define PATH_LEN 256
 
+// Define as typedefs for JOS
+// and #define for the fs format util
+// to override sys/types.h typedefs
+#ifndef FS_FORMAT_UTIL
 typedef uint16_t uid_t;
 typedef uint16_t gid_t;
 typedef uint16_t fsperm_t;
+#else
+#define uid_t uint16_t
+#define gid_t uint16_t
+#define fsperm_t uint16_t
+#endif
 
 #define FSP_A_X 0001
 #define FSP_A_W 0002

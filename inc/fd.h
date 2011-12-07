@@ -7,6 +7,7 @@
 
 #include <inc/types.h>
 #include <inc/fs.h>
+#include <inc/security.h>
 
 struct Fd;
 struct Stat;
@@ -52,6 +53,10 @@ struct Stat {
 	off_t st_size;
 	int st_isdir;
 	struct Dev *st_dev;
+
+	uid_t st_uid;
+	gid_t st_gid;
+	fsperm_t st_perm;
 };
 
 char*	fd2data(struct Fd *fd);

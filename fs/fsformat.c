@@ -23,6 +23,7 @@
 // Prevent inc/types.h, included from inc/fs.h,
 // from attempting to redefine types defined in the host's inttypes.h.
 #define JOS_INC_TYPES_H
+#define FS_FORMAT_UTIL
 // Typedef the types that inc/mmu.h needs.
 typedef uint32_t physaddr_t;
 typedef uint32_t off_t;

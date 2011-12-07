@@ -35,6 +35,10 @@ struct Fd {
 	int fd_dev_id;
 	off_t fd_offset;
 	int fd_omode;
+	unsigned perm;
+	gid_t gid;
+	uid_t uid;
+	
 	union {
 		// File server files
 		struct FdFile fd_file;

@@ -25,6 +25,8 @@ typedef uint16_t fsperm_t;
 #define FSP_O_R 0400
 
 
+#define DEFAULT_FILE_CREATE_PERM       FSP_O_W | FSP_O_R | FSP_G_R | FSP_A_R
+
 struct user_info
 {
 	char ui_name[NAME_LEN];

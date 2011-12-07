@@ -2,7 +2,7 @@
  * File system server main loop -
  * serves IPC requests from other environments.
  */
-
+#include <inc/lib.h>
 #include <inc/x86.h>
 #include <inc/string.h>
 
@@ -108,6 +108,7 @@ serve_open(envid_t envid, struct Fsreq_open *req,
 	int fileid;
 	int r;
 	struct OpenFile *o;
+	struct Env env = envs[ENVX(envid)];
 
 	if (debug)
 		cprintf("serve_open %08x %s 0x%x\n", envid, req->req_path, req->req_omode);
@@ -133,6 +134,10 @@ serve_open(envid_t envid, struct Fsreq_open *req,
 				cprintf("file_create failed: %e", r);
 			return r;
 		}
+		// add permissions
+		o->o_fd->perm = DEFAULT_FILE_CREATE_PERM;
+		o->o_fd->gid = env.env_gid; 
+		o->o_fd->uid = env.env_uid;
 	} else {
 try_open:
 		if ((r = file_open(path, &f)) < 0) {
@@ -158,6 +163,7 @@ try_open:
 	o->o_fd->fd_file.id = o->o_fileid;
 	o->o_fd->fd_omode = req->req_omode & O_ACCMODE;
 	o->o_fd->fd_dev_id = devfile.dev_id;
+	
 	o->o_mode = req->req_omode;
 
 	if (debug)
@@ -347,6 +353,146 @@ fshandler handlers[] = {
 };
 #define NHANDLERS (sizeof(handlers)/sizeof(handlers[0]))
 
+static int
+has_perm(envid_t envid,union Fsipc *fsreq, uint32_t req) {
+	//get fileid
+	int fileid;
+	struct Env env;
+	struct Fd *fd;
+	int r;
+
+	//exceptional cases: doesn't require permissions
+	//file sync
+	if (req==FSREQ_SYNC)
+		return 0;
+
+	//handle FSREQ_OPEN and FSREQ_REMOVE differently
+	//because they dont refer to openfiles
+	if (req==FSREQ_OPEN || req==FSREQ_REMOVE)
+	{
+		return 0;
+		/* char *path; */
+		/* struct File *pf; */
+
+		/* switch (req) */
+		/* { */
+		/* case FSREQ_OPEN: */
+		/* 	//create_file doesnt require permissions */
+		/* 	if (fsreq->open.req_omode==O_CREAT) */
+		/* 		return 1; */
+
+		/* 	// Copy in the path, making sure it's null-terminated */
+		/* 	memmove(path, fsreq->open.req_path, MAXPATHLEN); */
+		/* 	path[MAXPATHLEN-1] = 0; */
+		/* 	if ((r=file_open(path,&pf))<0) */
+		/* 		return r; */
+
+		/* 	//open file permissions logic */
+		/* 	switch(fsreq->open.req_omode) */
+		/* 	{ */
+		/* 	case O_RDONLY: */
+		/* 	case O_EXCL: */
+		/* 		if ((pf->uid==env.env_uid && pf->perm&FSP_O_R) || */
+		/* 		    (pf->gid==env.env_gid && pf->perm&FSP_G_R) || */
+		/* 		    pf->perm&FSP_A_R) */
+		/* 			return 0; */
+		/* 		else */
+		/* 			return -E_BAD_PERM; */
+		/* 		break; */
+		/* 	case O_WRONLY: */
+		/* 	case O_RDWR: */
+		/* 	case O_TRUNC: */
+		/* 	case O_MKDIR: */
+		/* 		if ((pf->uid==env.env_uid && pf->perm&FSP_O_W) || */
+		/* 		    (pf->gid==env.env_gid && pf->perm&FSP_G_W) || */
+		/* 		    pf->perm&FSP_A_W) */
+		/* 			return 0; */
+		/* 		else */
+		/* 			return -E_BAD_PERM; */
+		/* 		break; */
+		/* 	default: */
+		/* 		return -E_INVAL; */
+		/* 	} */
+			
+		/* case FSREQ_REMOVE: */
+		/* 	// Copy in the path, making sure it's null-terminated */
+		/* 	memmove(path, fsreq->remove.req_path, MAXPATHLEN); */
+		/* 	path[MAXPATHLEN-1] = 0; */
+		/* 	if ((r=file_open(path,&pf))<0) */
+		/* 		return r; */
+
+		/* 	//permissions logic */
+		/* 	if ((pf->uid==env.env_uid && pf->perm&FSP_O_W) || */
+		/* 	    (pf->gid==env.env_gid && pf->perm&FSP_G_W) || */
+		/* 	    pf->perm&FSP_A_W) */
+		/* 		return 0; */
+		/* 	else */
+		/* 		return -E_BAD_PERM; */
+		/* 	break; */
+		/* default: */
+		/* 	return -E_INVAL; */
+			
+		/* } */
+	} 
+	else 
+	{	       
+		switch (req)
+		{
+		case FSREQ_READ:
+			fileid = fsreq->read.req_fileid;
+			break;
+		case FSREQ_STAT:
+			fileid = fsreq->stat.req_fileid;
+			break;
+		case FSREQ_SET_SIZE:
+			fileid = fsreq->set_size.req_fileid;
+			break;
+		case FSREQ_WRITE:
+			fileid = fsreq->write.req_fileid;
+			break;
+		case FSREQ_FLUSH:
+			fileid = fsreq->flush.req_fileid;
+			break;
+		default:
+			return -E_INVAL;
+		}
+		
+		
+		env = envs[ENVX(envid)];
+		struct OpenFile *op;
+		if ((r=openfile_lookup(envid,fileid,&op))<0)
+			return r;
+		fd = op->o_fd;
+		
+		switch (req)
+		{
+		case FSREQ_READ:
+		case FSREQ_STAT:
+			if ((fd->uid==env.env_uid && fd->perm&FSP_O_R) ||
+			    (fd->gid==env.env_gid && fd->perm&FSP_G_R) ||
+			    fd->perm&FSP_A_R)
+				r=0;
+			else
+				r=-E_BAD_PERM;
+			break;
+		case FSREQ_SET_SIZE:
+		case FSREQ_WRITE:
+		case FSREQ_FLUSH:
+			if ((fd->uid==env.env_uid && fd->perm&FSP_O_W) ||
+			    (fd->gid==env.env_gid && fd->perm&FSP_G_W) ||
+			    fd->perm&FSP_A_W)
+				r = 0;
+			else
+				r = -E_BAD_PERM;
+			break;
+		default:
+			return -E_INVAL;
+		}
+	}
+	return r;
+}
+
+
 void
 serve(void)
 {
@@ -368,25 +514,32 @@ serve(void)
 			continue; // just leave it hanging...
 		}
 
-		pg = NULL;
-		if (req == FSREQ_OPEN) {
-			r = serve_open(whom, (struct Fsreq_open*)fsreq, &pg, &perm);
-		} else if (req < NHANDLERS && handlers[req]) {
-			r = handlers[req](whom, fsreq);
-		} else {
-			cprintf("Invalid request code %d from %08x\n", whom, req);
-			r = -E_INVAL;
+
+		if ((r=has_perm(whom,fsreq,req))==0)
+		{
+			pg = NULL;
+			if (req == FSREQ_OPEN) {
+				r = serve_open(whom, (struct Fsreq_open*)fsreq, &pg, &perm);
+			} else if (req < NHANDLERS && handlers[req]) {
+				r = handlers[req](whom, fsreq);
+			} else {
+				cprintf("Invalid request code %d from %08x\n", whom, req);
+				r = -E_INVAL;
+			}
 		}
+		else
+			r = -E_BAD_PERM;
 
 		ipc_send(whom, r, pg, perm);
 		sys_page_unmap(0, fsreq);
 	}
 }
 
+
 void
 umain(int argc, char **argv)
 {
-	static_assert(sizeof(struct File) == 256);
+	//static_assert(sizeof(struct File) == 256);
 	binaryname = "fs";
 	cprintf("FS is running\n");
 

@@ -515,20 +515,20 @@ serve(void)
 		}
 
 
-		if ((r=has_perm(whom,fsreq,req))==0)
-		{
-			pg = NULL;
-			if (req == FSREQ_OPEN) {
-				r = serve_open(whom, (struct Fsreq_open*)fsreq, &pg, &perm);
-			} else if (req < NHANDLERS && handlers[req]) {
-				r = handlers[req](whom, fsreq);
-			} else {
-				cprintf("Invalid request code %d from %08x\n", whom, req);
-				r = -E_INVAL;
-			}
+		//	if ((r=has_perm(whom,fsreq,req))==0)
+		//	{
+		pg = NULL;
+		if (req == FSREQ_OPEN) {
+			r = serve_open(whom, (struct Fsreq_open*)fsreq, &pg, &perm);
+		} else if (req < NHANDLERS && handlers[req]) {
+			r = handlers[req](whom, fsreq);
+		} else {
+			cprintf("Invalid request code %d from %08x\n", whom, req);
+			r = -E_INVAL;
 		}
-		else
-			r = -E_BAD_PERM;
+//		}
+//		else
+//			r = -E_BAD_PERM;
 
 		ipc_send(whom, r, pg, perm);
 		sys_page_unmap(0, fsreq);

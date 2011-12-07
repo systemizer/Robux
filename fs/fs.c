@@ -393,7 +393,7 @@ walk_path(const char *path, struct File **pdir, struct File **pf, char *lastelem
 // Create "path".  On success set *pf to point at the file and return 0.
 // On error return < 0.
 int
-file_create(const char *path, struct File **pf)
+file_create(const char *path, struct File **pf,gid_t gid,uid_t uid,unsigned perm)
 {
 	char name[MAXNAMELEN];
 	int r;
@@ -406,6 +406,9 @@ file_create(const char *path, struct File **pf)
 	if ((r = dir_alloc_file(dir, &f)) < 0)
 		return r;
 	strcpy(f->f_name, name);
+	f->f_perm = perm;
+	f->f_gid = gid;
+	f->f_uid = uid;
 	*pf = f;
 	file_flush(dir);
 	return 0;

@@ -201,13 +201,25 @@ sys_get_mac_addr(uint8_t buf[6])
 }
 
 int
-sys_get_env_user_id(uid_t *uid)
+sys_get_env_user_id()
 {
-	return syscall(SYS_get_env_user_id,0,(uint32_t)uid,0,0,0,0);
+	return syscall(SYS_get_env_user_id,0,0,0,0,0,0);
+}
+
+int
+sys_get_env_group_id()
+{
+	return syscall(SYS_get_env_group_id,0,0,0,0,0,0);
 }
 
 int 
-sys_set_user_id(uid_t uid)
+sys_set_user_id(envid_t envid, uid_t uid)
 {
-	return syscall(SYS_set_user_id,0,(uint32_t)uid,0,0,0,0);
+	return syscall(SYS_set_user_id,0,(uint32_t)envid, (uint32_t)uid,0,0,0);
+}
+	
+int 
+sys_set_group_id(envid_t envid, gid_t gid)
+{
+	return syscall(SYS_set_group_id,0,(uint32_t)envid, (uint32_t)gid,0,0,0);
 }

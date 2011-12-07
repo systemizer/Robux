@@ -44,14 +44,28 @@ login(void)
 		strncpy(password,buf,PASS_LEN);
 		printf("\n");
 		
-		uid = get_user_by_name(username, &info);
+		r = get_user_by_name(username, &info);
 
-		if(uid != 0) {
-			cprintf("No user exists: %s\n",username);
+		if(r != 0) {
+			cprintf("No user exists: %s\n", username);
 			continue;
 		}
-		r = verify_password(uid,password);
-		cprintf("Pass: %d\n",r);
+		r = verify_password(info.ui_uid, password);
+
+		if(r == 0)
+		{
+			const char *newarg[2];
+			newarg[0] = info.ui_shell;
+			newarg[1] = NULL;
+			cprintf("Spawning %s with args [%s]\n", info.ui_shell, newarg[0]);
+			int pid = spawn_full(info.ui_shell, newarg, info.ui_uid, info.ui_gid);
+			if(pid != 0)
+				wait(pid);
+		}
+		else
+		{
+			cprintf("Bad password\n");
+		}
 	}
 		
 }

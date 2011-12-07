@@ -289,10 +289,26 @@ umain(int argc, char **argv)
 	if (interactive == '?')
 		interactive = iscons(0);
 
+	char prompt[100];
+	
+	struct user_info info;
+	r = get_user_by_id(getuid(), &info);
+	if(r < 0)
+		strncpy(prompt, "unknown", 90);
+	else
+		strncpy(prompt, info.ui_name, 90); 
+
+	strcat(prompt, "@jos");
+
+	if(getuid() == 0)
+		strcat(prompt, "# ");
+	else
+		strcat(prompt, "$ ");
+
 	while (1) {
 		char *buf;
 
-		buf = readline(interactive ? "$ " : NULL);
+		buf = readline(interactive ? prompt : NULL);
 		if (buf == NULL) {
 			if (debug)
 				cprintf("EXITING\n");
@@ -306,6 +322,10 @@ umain(int argc, char **argv)
 			printf("# %s\n", buf);
 		if (debug)
 			cprintf("BEFORE FORK\n");
+
+		if(strncmp(buf, "exit", 4) == 0)
+			exit();
+
 		if ((r = fork()) < 0)
 			panic("fork: %e", r);
 		if (debug)

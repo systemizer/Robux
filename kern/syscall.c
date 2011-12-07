@@ -714,20 +714,47 @@ void syscall_cond_lock(uint32_t syscallno, int lock)
 }
 
 int
-sys_get_env_user_id(uid_t *uid)
+sys_get_env_user_id()
 {
-	memmove(uid,&curenv->uid,sizeof(uid_t));
+	return curenv->env_uid;
+}
+
+int
+sys_get_env_group_id()
+{
+	return curenv->env_gid;
+}
+
+int
+sys_set_user_id(envid_t envid, uid_t uid)
+{
+	struct Env *env;
+	int r = envid2env(envid, &env, 1);
+	if(r < 0)
+		return r;
+
+	if (curenv->env_uid != 0)
+		return -E_BAD_PERM;
+
+	env->env_uid = uid;
 	return 0;
 }
 
 int
-sys_set_user_id(uid_t uid)
+sys_set_group_id(envid_t envid, gid_t gid)
 {
-	if (curenv->uid!=0)
-		return -E_BAD_ENV;
-	curenv->uid = uid;
+	struct Env *env;
+	int r = envid2env(envid, &env, 1);
+	if(r < 0)
+		return r;
+
+	if (curenv->env_uid != 0)
+		return -E_BAD_PERM;
+
+	env->env_gid = gid;
 	return 0;
 }
+
 
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
@@ -780,13 +807,18 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 			ret = sys_ipc_try_send((envid_t)a1, (uint32_t)a2, 
 					       (void*)a3, (unsigned) a4);
 			break;
-	        case SYS_set_user_id:
-			ret = sys_set_user_id((uid_t)a1);
+	  case SYS_set_user_id:
+			ret = sys_set_user_id((envid_t)a1, (uid_t)a2);
 			break;
-	        case SYS_get_env_user_id:
-			ret = sys_get_env_user_id((uid_t *)a1);
+	  case SYS_set_group_id:
+			ret = sys_set_group_id((envid_t)a1, (gid_t)a2);
 			break;
- 
+	  case SYS_get_env_user_id:
+			ret = sys_get_env_user_id();
+			break;
+	  case SYS_get_env_group_id:
+			ret = sys_get_env_group_id();
+			break;
 		case SYS_ipc_recv:
 			ret = sys_ipc_recv((void*)a1);
 			break;
@@ -805,8 +837,7 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		case SYS_get_mac_addr:
 			ret = sys_get_mac_addr((uint8_t*)a1);
 			break;
-
-
+		
 		default:
 			ret = -E_INVAL;
 			break;

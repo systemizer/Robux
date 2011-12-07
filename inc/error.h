@@ -27,6 +27,7 @@ enum {
 	E_NOT_SUPP	= 15,	// Operation not supported
 	E_NET_NOT_RECV = 16,
 	E_USER_NOT_FOUND = 17,
+	E_BAD_PERM = 18,
 
 	MAXERROR
 };

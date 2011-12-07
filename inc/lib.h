@@ -66,8 +66,10 @@ unsigned int sys_time_msec(void);
 int sys_net_send_packet(void*, uint16_t);
 int sys_net_recv_packet(void*);
 int sys_get_mac_addr(uint8_t [6]);
-int sys_set_user_id(uid_t uid);
-int sys_get_env_user_id(uid_t *uid);
+int sys_set_user_id(envid_t to_env, uid_t uid);
+int sys_get_env_user_id();
+int sys_set_group_id(envid_t to_env, gid_t gid);
+int sys_get_env_group_id();
 
 // This must be inlined.  Exercise for reader: why?
 static __inline envid_t __attribute__((always_inline))
@@ -133,6 +135,7 @@ int     nsipc_socket(int domain, int type, int protocol);
 
 // spawn.c
 envid_t	spawn(const char *program, const char **argv);
+envid_t	spawn_full(const char *program, const char **argv, uid_t uid, gid_t gid);
 envid_t	spawnl(const char *program, const char *arg0, ...);
 
 // console.c
@@ -152,6 +155,9 @@ void	wait(envid_t env);
 int get_user_by_id(uid_t, struct user_info*);
 int get_user_by_name(char*, struct user_info*);
 int verify_password(uid_t, char *pass);
+
+uid_t getuid();
+gid_t getgid();
 
 /* File open modes */
 #define	O_RDONLY	0x0000		/* open for reading only */

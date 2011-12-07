@@ -12,13 +12,22 @@ static int map_segment(envid_t child, uintptr_t va, size_t memsz,
 		       int fd, size_t filesz, off_t fileoffset, int perm);
 static int copy_shared_pages(envid_t child);
 
+
+int 
+spawn(const char *prog, const char **argv)
+{
+	return spawn_full(prog, argv, 0, 0);
+}
+
 // Spawn a child process from a program image loaded from the file system.
 // prog: the pathname of the program to run.
 // argv: pointer to null-terminated array of pointers to strings,
 // 	 which will be passed to the child as its command-line arguments.
+// uid: the uid that the child process should run as, 0 means copy curenv
+// gid: the gid that the child process should run as, 0 means copy curenv
 // Returns child envid on success, < 0 on failure.
 int
-spawn(const char *prog, const char **argv)
+spawn_full(const char *prog, const char **argv, uid_t uid, gid_t gid)
 {
 	unsigned char elf_buf[512];
 	struct Trapframe child_tf;
@@ -103,6 +112,17 @@ spawn(const char *prog, const char **argv)
 	if ((r = sys_exofork()) < 0)
 		return r;
 	child = r;
+
+	if(uid)
+	{
+		if((r = sys_set_user_id(r, uid)) < 0)
+			return r;
+	}
+	if(gid)
+	{
+		if((r = sys_set_group_id(r, gid)) < 0)
+			return r;
+	}
 
 	// Set up trap frame, including initial stack.
 	child_tf = envs[ENVX(child)].env_tf;

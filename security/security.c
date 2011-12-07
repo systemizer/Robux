@@ -243,11 +243,15 @@ recv_loop()
 				break;
 			case UID2INFO:
 
+
 				if(req_user == NULL)
 				{
+					cprintf("Searched uid %d, not found\n", request_buf->uid_req.uid);
 					ipc_send(from, -E_USER_NOT_FOUND, NULL, 0);
 					break;
 				}
+				
+				cprintf("Searched uid %d, found %s\n", request_buf->uid_req.uid, req_user->ui_name);
 
 				if(sys_page_alloc(0, reply_buf, PTE_P | PTE_U | PTE_W) < 0)
 					panic("security: failed to alloc reply page\n");

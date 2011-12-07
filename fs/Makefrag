@@ -32,6 +32,8 @@ USERAPPS :=		$(USERAPPS) \
 			$(OBJDIR)/user/testpipe \
 			$(OBJDIR)/user/testpteshare \
 			$(OBJDIR)/user/testshell \
+			$(OBJDIR)/user/logname \
+			$(OBJDIR)/user/testsec \
 			$(OBJDIR)/user/testmalloc 
 
 FSIMGTXTFILES :=	$(FSIMGTXTFILES) \

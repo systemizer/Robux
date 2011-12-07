@@ -33,7 +33,8 @@ LIB_SRCFILES :=		$(LIB_SRCFILES) \
 			lib/wait.c
 
 LIB_SRCFILES :=		$(LIB_SRCFILES) \
-			lib/security.c
+			lib/security.c \
+			lib/getid.c
 
 LIB_SRCFILES := $(LIB_SRCFILES) \
 			contrib/libgcrypt-cipher/des.c

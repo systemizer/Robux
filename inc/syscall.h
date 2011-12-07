@@ -23,6 +23,8 @@ enum {
 	SYS_get_mac_addr,
 	SYS_get_env_user_id,
 	SYS_set_user_id,
+	SYS_get_env_group_id,
+	SYS_set_group_id,
 	NSYSCALLS
 };
 

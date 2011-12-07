@@ -46,6 +46,7 @@ login(int forever)
 			exit();
 		}
 		strncpy(username,buf,NAME_LEN);
+		username[NAME_LEN-1] = '\0';
 
 		// Disable remote echo if not console
 		if(!iscons(1))
@@ -77,6 +78,7 @@ login(int forever)
 		}
 
 		strncpy(password,buf,PASS_LEN);
+		password[PASS_LEN-1] = '\0';
 		printf("\n");
 		
 		r = get_user_by_name(username, &info);
@@ -104,7 +106,7 @@ login(int forever)
 		}
 		else
 		{
-			cprintf("Bad password\n");
+			printf("Bad password\n");
 		}
 	}
 		

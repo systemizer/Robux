@@ -15,16 +15,18 @@ forkchild(const char *cur, char branch)
 		return;
 
 	snprintf(nxt, DEPTH+1, "%s%c", cur, branch);
-	if (fork() == 0) {
+	int r;
+	if ((r = fork()) == 0) {
 		forktree(nxt);
 		exit();
 	}
+	wait(r);
 }
 
 void
 forktree(const char *cur)
 {
-	cprintf("%04x: I am '%s'\n", sys_getenvid(), cur);
+	printf("%04x: I am '%s'\n", sys_getenvid(), cur);
 
 	forkchild(cur, '0');
 	forkchild(cur, '1');

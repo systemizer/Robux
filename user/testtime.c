@@ -25,11 +25,11 @@ umain(int argc, char **argv)
 	for (i = 0; i < 50; i++)
 		sys_yield();
 
-	cprintf("starting count down: ");
+	printf("starting count down: ");
 	for (i = 5; i >= 0; i--) {
-		cprintf("%d ", i);
+		printf("%d ", i);
 		sleep(1);
 	}
-	cprintf("\n");
+	printf("\n");
 	breakpoint();
 }

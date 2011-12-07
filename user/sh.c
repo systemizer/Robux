@@ -12,6 +12,9 @@ int debug = 0;
 // tokens from the string.
 int gettoken(char *s, char **token);
 
+// Change all cprintfs to printfs very messily
+#define cprintf printf
+
 
 // Parse a shell command from string 's' and execute it.
 // Do not return until the shell command is finished.

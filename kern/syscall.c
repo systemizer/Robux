@@ -16,6 +16,7 @@
 
 #include <kern/e1000.h>
 
+#define debug 0
 #define no_sleep_send 0
 
 
@@ -454,6 +455,9 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 		curenv->env_ipc_send_perm = perm;
 
 
+		if(debug)
+			cprintf("[%x] Sleeping on IPC to %x\n", curenv->env_id, envid);
+
 		// Sleep and yield
 		curenv->env_status = ENV_NOT_RUNNABLE;
 		sched_yield();
@@ -475,6 +479,8 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 	}
 
 
+	if(debug)
+		cprintf("[%x] Waking on IPC from %x\n", envid, curenv->env_id);
 
 	// If we made it here, there were no errors, update fields
 	env->env_ipc_recving = 0;
@@ -619,6 +625,9 @@ sys_ipc_recv(void *dstva)
 
 	curenv->env_ipc_recving = 1;
 	curenv->env_status = ENV_NOT_RUNNABLE;
+
+	if(debug)
+		cprintf("[%x] sleeping on IPC recv\n", curenv->env_id);
 	sched_yield();
 
 	

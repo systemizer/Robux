@@ -37,7 +37,7 @@ again:
 
 		case 'w':	// Add an argument
 			if (argc == MAXARGS) {
-				cprintf("too many arguments\n");
+				printf("too many arguments\n");
 				exit();
 			}
 			argv[argc++] = t;
@@ -46,11 +46,11 @@ again:
 		case '<':	// Input redirection
 			// Grab the filename from the argument list
 			if (gettoken(0, &t) != 'w') {
-				cprintf("syntax error: < not followed by word\n");
+				printf("syntax error: < not followed by word\n");
 				exit();
 			}
 			if ((fd = open(t, O_RDONLY)) < 0) {
-				cprintf("open %s for read: %e", t, fd);
+				printf("open %s for read: %e\n", t, fd);
 				exit();
 			}
 			if (fd != 0) {
@@ -62,11 +62,11 @@ again:
 		case '>':	// Output redirection
 			// Grab the filename from the argument list
 			if (gettoken(0, &t) != 'w') {
-				cprintf("syntax error: > not followed by word\n");
+				printf("syntax error: > not followed by word\n");
 				exit();
 			}
 			if ((fd = open(t, O_WRONLY|O_CREAT|O_TRUNC)) < 0) {
-				cprintf("open %s for write: %e", t, fd);
+				printf("open %s for write: %e\n", t, fd);
 				exit();
 			}
 			if (fd != 1) {
@@ -77,13 +77,13 @@ again:
 
 		case '|':	// Pipe
 			if ((r = pipe(p)) < 0) {
-				cprintf("pipe: %e", r);
+				printf("pipe: %e\n", r);
 				exit();
 			}
 			if (debug)
 				cprintf("PIPE: %d %d\n", p[0], p[1]);
 			if ((r = fork()) < 0) {
-				cprintf("fork: %e", r);
+				printf("fork: %e\n", r);
 				exit();
 			}
 			if (r == 0) {
@@ -145,7 +145,7 @@ runit:
 
 	// Spawn the command!
 	if ((r = spawn(argv[0], (const char**) argv)) < 0)
-		cprintf("spawn %s: %e\n", argv[0], r);
+		printf("spawn %s: %e\n", argv[0], r);
 
 	// In the parent, close all file descriptors and wait for the
 	// spawned command to exit.

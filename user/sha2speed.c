@@ -50,13 +50,13 @@ void usage(char *prog) {
 
 void printspeed(char *caption, unsigned long bytes, unsigned int time) {
 	if (bytes / 1073741824UL > 0) {
-                printf("%s %d sec (%d GBps)\n", caption, time, bytes/(1073741824UL/time/1000));
+                printf("%s %d sec (%d GBps)\n", caption, time, bytes/(1073741824UL/time));
         } else if (bytes / 1048576 > 0) {
-                printf("%s %d (%d MBps)\n", caption, time, bytes/(1048576/time/1000));
+                printf("%s %d (%d MBps)\n", caption, time, bytes/(1048576/time));
         } else if (bytes / 1024 > 0) {
-                printf("%s %d (%d KBps)\n", caption, time, bytes/(1024/time/1000));
+                printf("%s %d (%d KBps)\n", caption, time, bytes/(1024/time));
         } else {
-		printf("%s %d (%d Bps)\n", caption, time, bytes/(time/1000));
+		printf("%s %d (%d Bps)\n", caption, time, bytes/(time));
 	}
 }
 

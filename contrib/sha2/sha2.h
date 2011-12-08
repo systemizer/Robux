@@ -45,13 +45,17 @@ extern "C" {
  * may need to change this, or define these things yourself in this
  * file.
  */
-#include <sys/types.h>
+#include <inc/types.h>
+#include <inc/lib.h>
 
 #ifdef SHA2_USE_INTTYPES_H
 
 #include <inttypes.h>
 
 #endif /* SHA2_USE_INTTYPES_H */
+
+
+#define SHA2_USE_INTTYPES_H
 
 
 /*** SHA-256/384/512 Various Length Definitions ***********************/

@@ -279,8 +279,8 @@ trap_dispatch(struct Trapframe *tf)
 	// LAB 4: Your code here.
 	if (tf->tf_trapno == IRQ_OFFSET + IRQ_TIMER)
 	{
-		// BUG? Does this need to figure out multiple CPUS?
-		time_tick();
+		if(cpunum() == 0)
+			time_tick();
 		lapic_eoi();
 		sched_yield();
 	}

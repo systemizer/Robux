@@ -25,6 +25,12 @@ umain(int argc, char **argv)
 	int i, r, x, want;
 	char args[256];
 
+	if(getuid() != 0)
+	{
+		printf("Only root may run init\n");
+		exit();
+	}
+
 	cprintf("init: running\n");
 
 	want = 0xf989e;

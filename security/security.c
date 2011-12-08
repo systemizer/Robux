@@ -108,7 +108,7 @@ get_user_arr(struct user_info **arrptr, uint32_t *count_ret)
 			cprintf("passwd: no pass\n");
 			continue;
 		}
-		strncpy(ret[retindex].ui_pass, cur, MIN(NAME_LEN, end-cur));
+		strncpy(ret[retindex].ui_pass, cur, MIN(PASS_LEN, end-cur));
 
 		char tmp_buf[20];
 		
@@ -141,7 +141,7 @@ get_user_arr(struct user_info **arrptr, uint32_t *count_ret)
 			cprintf("passwd: no comment\n");
 			continue;
 		}
-		strncpy(ret[retindex].ui_comment, cur, MIN(NAME_LEN, end-cur));
+		strncpy(ret[retindex].ui_comment, cur, MIN(COMMENT_LEN, end-cur));
 
 		cur = end+1;
 		end = strchr(cur, ':');
@@ -153,7 +153,7 @@ get_user_arr(struct user_info **arrptr, uint32_t *count_ret)
 		strncpy(ret[retindex].ui_home, cur, MIN(NAME_LEN, end-cur));
 		
 		cur = end+1;
-		strncpy(ret[retindex].ui_shell, cur, NAME_LEN);
+		strncpy(ret[retindex].ui_shell, cur, PATH_LEN);
 
 		retindex++;
 	}

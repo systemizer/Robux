@@ -3,7 +3,7 @@
 
 
 #define NAME_LEN 32
-#define PASS_LEN 32
+#define PASS_LEN 128
 
 #define COMMENT_LEN 256
 #define PATH_LEN 256

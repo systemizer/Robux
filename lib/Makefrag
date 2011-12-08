@@ -34,10 +34,8 @@ LIB_SRCFILES :=		$(LIB_SRCFILES) \
 
 LIB_SRCFILES :=		$(LIB_SRCFILES) \
 			lib/security.c \
-			lib/getid.c
-
-#LIB_SRCFILES := $(LIB_SRCFILES) \
-#			contrib/libgcrypt-cipher/des.c
+			lib/getid.c \
+			lib/sha2.c
 
 LIB_OBJFILES := $(patsubst lib/%.c, $(OBJDIR)/lib/%.o, $(LIB_SRCFILES))
 LIB_OBJFILES := $(patsubst lib/%.S, $(OBJDIR)/lib/%.o, $(LIB_OBJFILES))

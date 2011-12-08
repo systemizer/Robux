@@ -199,9 +199,20 @@ serve_thread(uint32_t a) {
 		break;
 	}
 	case NSREQ_BIND:
-		r = lwip_bind(req->bind.req_s, &req->bind.req_name,
-			      req->bind.req_namelen);
+	{
+		int uid = envs[ENVX(args->whom)].env_uid;
+		struct sockaddr_in *addr = (struct sockaddr_in*)&req->bind.req_name;
+		if(uid != 0 && ntohs(addr->sin_port) < 1024)
+		{
+			r = -E_BAD_PERM;
+		}
+		else
+		{
+			r = lwip_bind(req->bind.req_s, &req->bind.req_name,
+				      req->bind.req_namelen);
+		}
 		break;
+	}
 	case NSREQ_SHUTDOWN:
 		r = lwip_shutdown(req->shutdown.req_s, req->shutdown.req_how);
 		break;

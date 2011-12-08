@@ -5,9 +5,9 @@
 
 #define MAXPENDING 10
 
-void die(const char *msg)
+void die(const char *msg, int error_code)
 {
-	cprintf(msg);
+	cprintf(msg, error_code);
 	exit();
 }
 
@@ -40,7 +40,7 @@ do_listen(short port)
 
 	serversock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(serversock < 0)
-		die("Failed to create socket\n");
+		die("Failed to create socket: %e\n", serversock);
 
 	memset(&serveraddr, 0, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
@@ -49,20 +49,20 @@ do_listen(short port)
 
 	int r = bind(serversock, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 	if(r < 0)
-		die("Failed to bind\n");
+		die("Failed to bind: %e\n", r);
 
 	r = listen(serversock, MAXPENDING);
 	if(r < 0)
-		die("Failed to listen\n");
+		die("Failed to listen: %e\n", r);
 
-	cprintf("Telnet server running on port %d\n", port);
+	printf("Telnet server running on port %d\n", port);
 	while(1) 
 	{
 		clientsock = accept(serversock, (struct sockaddr *) &clientaddr, &clientlen);
 		if(clientsock < 0)
-			die("Failed to accept client connection\n");
+			die("Failed to accept client connection: %e\n", clientsock);
 
-		cprintf("Telnet: Client connected from %s\n", inet_ntoa(clientaddr.sin_addr));
+		printf("Telnet: Client connected from %s\n", inet_ntoa(clientaddr.sin_addr));
 		handle_client(clientsock);
 	}
 	
@@ -83,10 +83,10 @@ umain(int argc, char *argv[])
 		printf("Usage: telnet [port]\n");
 	}
 
-	close(0);
-	close(1);
-	opencons();
-	opencons();
+	//close(0);
+	//close(1);
+	//opencons();
+	//opencons();
 
 	do_listen(port);
 

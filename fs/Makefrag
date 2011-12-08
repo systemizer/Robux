@@ -24,7 +24,6 @@ USERAPPS :=		$(USERAPPS) \
 			$(OBJDIR)/user/lsfd \
 			$(OBJDIR)/user/num \
 			$(OBJDIR)/user/forktree \
-			$(OBJDIR)/user/primes \
 			$(OBJDIR)/user/primespipe \
 			$(OBJDIR)/user/sh \
 			$(OBJDIR)/user/testfdsharing \
@@ -36,6 +35,7 @@ USERAPPS :=		$(USERAPPS) \
 			$(OBJDIR)/user/testsec \
 			$(OBJDIR)/user/login \
 			$(OBJDIR)/user/telnetd \
+			$(OBJDIR)/user/freq \
 			$(OBJDIR)/user/testmalloc 
 
 FSIMGTXTFILES :=	$(FSIMGTXTFILES) \

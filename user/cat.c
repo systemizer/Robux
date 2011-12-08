@@ -10,9 +10,14 @@ cat(int f, char *s)
 
 	while ((n = read(f, buf, (long)sizeof(buf))) > 0)
 		if ((r = write(1, buf, n)) != n)
-			panic("write error copying %s: %e", s, r);
+		{
+			printf("write error copying %s: %e\n", s, r);
+			exit();
+		}
 	if (n < 0)
-		panic("error reading %s: %e", s, n);
+	{
+		printf("error reading %s: %e\n", s, n);
+	}
 }
 
 void

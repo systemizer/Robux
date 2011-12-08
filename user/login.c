@@ -30,6 +30,12 @@ login(int forever)
 
 	cprintf("initializing login environment\n");
 	login_init();
+
+	if(getuid() != 0)
+	{
+		printf("Error: You must run login as root\n");
+		exit();
+	}
 		       
 	// Wait for the console to calm down
 	int i;

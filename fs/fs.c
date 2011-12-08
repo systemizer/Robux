@@ -532,6 +532,15 @@ file_set_size(struct File *f, off_t newsize)
 	return 0;
 }
 
+//Set the permission of file f
+int 
+file_set_perm(struct File *f, fsperm_t newperm)
+{
+	f->f_perm = newperm;
+	flush_block(f);
+	return 0;
+}
+
 // Flush the contents and metadata of file f out to disk.
 // Loop over all the blocks in file.
 // Translate the file block number into a disk block number

@@ -343,6 +343,20 @@ serve_sync(envid_t envid, union Fsipc *req)
 	return 0;
 }
 
+//Change permission of a file
+int
+serve_chmod(envid_t envid, union Fsipc *req)
+{
+	struct OpenFile* po;
+	int r;
+	if ((r=openfile_lookup(envid, req->chmod.req_fileid,&po))<0)
+		return r;
+	if ((r=file_set_perm(po->o_file,req->chmod.f_perm))<0)
+		return r;
+	po->o_fd->perm = req->chmod.f_perm;
+	return 0;		
+}
+
 typedef int (*fshandler)(envid_t envid, union Fsipc *req);
 
 fshandler handlers[] = {
@@ -354,7 +368,8 @@ fshandler handlers[] = {
 	[FSREQ_STAT] =		serve_stat,
 	[FSREQ_FLUSH] =		(fshandler)serve_flush,
 	[FSREQ_REMOVE] =	(fshandler)serve_remove,
-	[FSREQ_SYNC] =		serve_sync
+	[FSREQ_SYNC] =		serve_sync,
+	[FSREQ_CHMOD] =         serve_chmod
 };
 #define NHANDLERS (sizeof(handlers)/sizeof(handlers[0]))
 

@@ -305,6 +305,23 @@ ftruncate(int fdnum, off_t newsize)
 }
 
 int
+fchmod(int fdnum, fsperm_t newperm)
+{
+	int r;
+	struct Fd *fd;
+	struct Dev *dev;
+
+	if ((r = fd_lookup(fdnum, &fd)) < 0
+	    || (r = dev_lookup(fd->fd_dev_id, &dev)) < 0)
+		return r;
+	if (!dev->dev_chmod)
+		return -E_NOT_SUPP;
+	return (*dev->dev_chmod)(fd, newperm);
+
+
+}
+
+int
 fstat(int fdnum, struct Stat *stat)
 {
 	int r;

@@ -33,6 +33,7 @@ static ssize_t devfile_read(struct Fd *fd, void *buf, size_t n);
 static ssize_t devfile_write(struct Fd *fd, const void *buf, size_t n);
 static int devfile_stat(struct Fd *fd, struct Stat *stat);
 static int devfile_trunc(struct Fd *fd, off_t newsize);
+static int devfile_chmod(struct Fd *fd, fsperm_t newperm);
 
 struct Dev devfile =
 {
@@ -42,7 +43,8 @@ struct Dev devfile =
 	.dev_write =	devfile_write,
 	.dev_close =	devfile_flush,
 	.dev_stat =	devfile_stat,
-	.dev_trunc =	devfile_trunc
+	.dev_trunc =	devfile_trunc,
+	.dev_chmod =    devfile_chmod
 };
 
 // Open a file (or directory).
@@ -178,6 +180,17 @@ devfile_trunc(struct Fd *fd, off_t newsize)
 	fsipcbuf.set_size.req_size = newsize;
 	return fsipc(FSREQ_SET_SIZE, NULL);
 }
+
+// Truncate or extend an open file to 'size' bytes
+static int
+devfile_chmod(struct Fd *fd, fsperm_t newperm)
+{
+	fsipcbuf.chmod.req_fileid = fd->fd_file.id;
+	fsipcbuf.chmod.f_perm = newperm;
+	return fsipc(FSREQ_CHMOD, NULL);
+}
+
+
 
 // Delete a file
 int

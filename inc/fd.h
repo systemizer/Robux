@@ -22,6 +22,7 @@ struct Dev {
 	int (*dev_close)(struct Fd *fd);
 	int (*dev_stat)(struct Fd *fd, struct Stat *stat);
 	int (*dev_trunc)(struct Fd *fd, off_t length);
+	int (*dev_chmod)(struct Fd *fd, fsperm_t newperm);
 };
 
 struct FdFile {

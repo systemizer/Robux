@@ -109,6 +109,7 @@ int isopen(int fd);
 // file.c
 int	open(const char *path, int mode);
 int	ftruncate(int fd, off_t size);
+int     fchmod(int fd,fsperm_t newperm);
 int	remove(const char *path);
 int	sync(void);
 

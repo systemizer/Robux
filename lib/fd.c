@@ -167,6 +167,7 @@ close_all(void)
 }
 
 
+// Return whether or not the given fd is open
 int
 isopen(int fd)
 {
@@ -304,6 +305,7 @@ ftruncate(int fdnum, off_t newsize)
 	return (*dev->dev_trunc)(fd, newsize);
 }
 
+// Modify the permissions for a file opened by the given fd
 int
 fchmod(int fdnum, fsperm_t newperm)
 {

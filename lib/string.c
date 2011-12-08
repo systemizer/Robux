@@ -289,6 +289,7 @@ strtol(const char *s, char **endptr, int base)
 
 
 
+// Implementation of basic atoi to read integers in base 10
 int 
 atoi(const char *str)
 {

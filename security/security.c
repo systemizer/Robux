@@ -1,13 +1,28 @@
+/*
+ * This file is the security server process.
+ *
+ * This process is responsible for managing the /passwd file.
+ *
+ * It is the only way to get information about users and to 
+ * verify passwords for users.
+ */
+
+
+
+
 #include <inc/lib.h>
 #include <inc/security.h>
 #include <security/secipc.h>
 #include <inc/mmu.h>
 
+// Put the buffers to pass in IPC at a fixed location below UTOP but
+// above the range owned by malloc
 struct user_info *reply_buf  = (struct user_info *)0x10000000;
 union secipc_buffer *request_buf = (union secipc_buffer *)0x10001000;
 
 
-// Read all of /passwd into memory
+// Read all of /passwd into memory and return a pointer to it in ret
+// Put the size of the file into the int referred to by sizeret
 void 
 read_passwd(char **ret, uint32_t *sizeret)
 {
@@ -40,6 +55,7 @@ read_passwd(char **ret, uint32_t *sizeret)
 }
 
 // Count users in a passwd file by counting newlines
+// Returns the number of users in the password file
 int
 count_users(char *passwd, uint32_t size)
 {
@@ -54,6 +70,9 @@ count_users(char *passwd, uint32_t size)
 	return ret;
 }
 
+// Load and parse the passwd file.
+// Set arrptr to the beginning of an array of pointers to user info
+// structures, one for each user correctly read from disk.
 void
 get_user_arr(struct user_info **arrptr, uint32_t *count_ret)
 {
@@ -170,6 +189,7 @@ get_user_arr(struct user_info **arrptr, uint32_t *count_ret)
 }
 
 
+// Main server receive loop
 void 
 recv_loop()
 {

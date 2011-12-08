@@ -44,7 +44,8 @@ static const char * const error_string[MAXERROR] =
  * Print a number (base <= 16) in reverse order,
  * using specified putch function and associated pointer putdat.
  *
- * This has been modified to take negative numbers into account itself
+ * PROJECT: This has been modified to take negative numbers into account 
+ * itself so that they format nicer
  */
 static void
 printnum(void (*putch)(int, void*), void *putdat,

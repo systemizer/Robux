@@ -409,6 +409,7 @@ cons_intr(int (*proc)(void))
 	while ((c = (*proc)()) != -1) {
 		if (c == 0)
 			continue;
+		// Project: Changed this to convert CR to LF
 		cons.buf[cons.wpos++] = (c == '\r')?'\n':c;
 		if (cons.wpos == CONSBUFSIZE)
 			cons.wpos = 0;

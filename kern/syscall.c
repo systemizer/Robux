@@ -722,18 +722,22 @@ void syscall_cond_lock(uint32_t syscallno, int lock)
 #endif
 }
 
+// Get the user_id of the current environment
 int
 sys_get_env_user_id()
 {
 	return curenv->env_uid;
 }
 
+// Get the group_id of the current environment
 int
 sys_get_env_group_id()
 {
 	return curenv->env_gid;
 }
 
+// Set the user_id of the given environment to the given uid.
+// Only parents running as root may change the uid of their children
 int
 sys_set_user_id(envid_t envid, uid_t uid)
 {
@@ -749,6 +753,8 @@ sys_set_user_id(envid_t envid, uid_t uid)
 	return 0;
 }
 
+// Set the group_id of the given environment to the given gid.
+// Only parents running as root may change the gid of their children
 int
 sys_set_group_id(envid_t envid, gid_t gid)
 {

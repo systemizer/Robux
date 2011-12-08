@@ -13,6 +13,8 @@ static int map_segment(envid_t child, uintptr_t va, size_t memsz,
 static int copy_shared_pages(envid_t child);
 
 
+// Spawn is now a wrapper around spawn_full, which also supports
+// explicitly setting the uid and gid of the new process
 int 
 spawn(const char *prog, const char **argv)
 {
@@ -116,12 +118,12 @@ spawn_full(const char *prog, const char **argv, uid_t uid, gid_t gid)
 	if(uid)
 	{
 		if((r = sys_set_user_id(r, uid)) < 0)
-			return r;
+			goto error;
 	}
 	if(gid)
 	{
 		if((r = sys_set_group_id(r, gid)) < 0)
-			return r;
+			goto error;
 	}
 
 	// Set up trap frame, including initial stack.

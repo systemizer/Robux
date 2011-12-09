@@ -81,7 +81,7 @@ retry:
 	memset((void*)tail, 0, sizeof(struct tx_desc));
 
 	tail->addr = PADDR(addr);
-	tail->length = length, 42;
+	tail->length = length;
 	tail->cmd = TXD_CMD_RS | TXD_CMD_EOP;
 
 	e1000[E1000_INDEX(E1000_TDT)] = (e1000[E1000_INDEX(E1000_TDT)] + 1) % E1000_NUM_DESC;

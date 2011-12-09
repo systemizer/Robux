@@ -307,7 +307,6 @@ recv_loop()
 
 				char temp[PASS_LEN];
 				memset(temp, 0, PASS_LEN);
-				cprintf("pass: \"%s\"\n", request_buf->verify_req.pass);
 				hash_pass(request_buf->verify_req.pass, temp);
 				int comp = strncmp(req_user->ui_pass, temp, PASS_LEN);
 

@@ -433,12 +433,13 @@ has_perm(envid_t envid,union Fsipc *fsreq, uint32_t req) {
 	{
 		char path[MAXPATHLEN];
 		struct File *pf;
+		
 
 		switch (req)
 		{
 		case FSREQ_OPEN:
-			//create_file doesnt require permissions
-			if (fsreq->open.req_omode==O_CREAT)
+			//if creating a new file, return 0
+			if ((fsreq->open.req_omode&~O_ACCMODE)==(O_CREAT|O_TRUNC))
 				return 0;
 
 			// Copy in the path, making sure it's null-terminated
@@ -448,12 +449,10 @@ has_perm(envid_t envid,union Fsipc *fsreq, uint32_t req) {
 			//populate pf with struct File
 			if ((r=file_open(path,&pf))<0)
 				return r;
-
-			//open file permissions logic
-			switch(fsreq->open.req_omode)
+			
+			switch(fsreq->open.req_omode&O_ACCMODE)
 			{
 			case O_RDONLY:
-			case O_EXCL:
 				if ((pf->f_uid==env.env_uid && pf->f_perm&FSP_O_R) ||
 				    (pf->f_gid==env.env_gid && pf->f_perm&FSP_G_R) ||
 				    pf->f_perm&FSP_A_R)
@@ -463,8 +462,6 @@ has_perm(envid_t envid,union Fsipc *fsreq, uint32_t req) {
 				break;
 			case O_WRONLY:
 			case O_RDWR:
-			case O_TRUNC:
-			case O_MKDIR:
 				if ((pf->f_uid==env.env_uid && pf->f_perm&FSP_O_W) ||
 				    (pf->f_gid==env.env_gid && pf->f_perm&FSP_G_W) ||
 				    pf->f_perm&FSP_A_W)
@@ -474,6 +471,7 @@ has_perm(envid_t envid,union Fsipc *fsreq, uint32_t req) {
 				break;
 			default:
 				return -E_INVAL;
+
 			}
 			
 		case FSREQ_REMOVE:

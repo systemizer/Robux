@@ -5,6 +5,8 @@
 static char buf[BUFLEN];
 
 
+// Read a line from stdin, and echo to stdout.
+// If no_echo is nonzero, skip echoing (for passwords)
 char *
 readline_full(const char *prompt, int no_echo)
 {
@@ -49,6 +51,7 @@ readline_full(const char *prompt, int no_echo)
 	}
 }
 
+// Readline has been changed to a wrapper around readline_full
 char *
 readline(const char *prompt)
 {

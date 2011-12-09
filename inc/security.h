@@ -34,8 +34,8 @@ typedef uint16_t fsperm_t;
 #define FSP_O_R 0400
 
 
-#define DEFAULT_FILE_CREATE_PERM       FSP_O_W | FSP_O_R | FSP_G_R | FSP_A_R
-#define DEFAULT_DIR_CREATE_PERM       FSP_O_W | FSP_O_R | FSP_O_X | FSP_G_R | FSP_G_W | FSP_A_R
+#define DEFAULT_FILE_CREATE_PERM       FSP_O_W | FSP_O_R | FSP_G_R | FSP_A_R | FSP_A_X | FSP_G_X | FSP_O_X
+#define DEFAULT_DIR_CREATE_PERM       FSP_O_W | FSP_O_R | FSP_O_X | FSP_G_R | FSP_G_W | FSP_A_R | FSP_O_X | FSP_G_X | FSP_A_X
 
 struct user_info
 {

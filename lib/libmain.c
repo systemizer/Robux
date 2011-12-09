@@ -20,6 +20,11 @@ libmain(int argc, char **argv)
 	if (argc > 0)
 		binaryname = argv[0];
 
+	// Automatically open the console if stdin and stdout are not set
+	// This allows printf to work without manually opening
+	// the console in each program that needs I/O
+	// This was necessary in changing programs to use printf instead of
+	// cprintf so that they work over telnet
 	if(!isopen(0) && !isopen(1))
 	{
 		opencons();

@@ -23,6 +23,8 @@ struct Dev {
 	int (*dev_stat)(struct Fd *fd, struct Stat *stat);
 	int (*dev_trunc)(struct Fd *fd, off_t length);
 	int (*dev_chmod)(struct Fd *fd, fsperm_t newperm);
+	int (*dev_chown)(struct Fd *fd, uid_t uid);
+	int (*dev_chgrp)(struct Fd *fd, gid_t gid);
 };
 
 struct FdFile {

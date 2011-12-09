@@ -110,6 +110,8 @@ int isopen(int fd);
 int	open(const char *path, int mode);
 int	ftruncate(int fd, off_t size);
 int     fchmod(int fd,fsperm_t newperm);
+int     fchown(int fd,uid_t uid);
+int     fchgrp(int fd,gid_t gid);
 int	remove(const char *path);
 int	sync(void);
 

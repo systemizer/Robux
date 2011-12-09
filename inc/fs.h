@@ -77,6 +77,8 @@ enum {
 	FSREQ_REMOVE,
 	FSREQ_SYNC,
 	FSREQ_CHMOD,
+	FSREQ_CHOWN,
+	FSREQ_CHGRP
 };
 
 union Fsipc {
@@ -121,6 +123,15 @@ union Fsipc {
 		int req_fileid;
 		fsperm_t f_perm;
 	} chmod;
+	struct Fsreq_chown {
+		int req_fileid;
+		uid_t uid;
+	} chown;
+	struct Fsreq_chgrp {
+		int req_fileid;
+		gid_t gid;
+	} chgrp;
+
 		
 	// Ensure Fsipc is one page
 	char _pad[PGSIZE];

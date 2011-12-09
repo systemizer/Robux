@@ -357,6 +357,35 @@ serve_chmod(envid_t envid, union Fsipc *req)
 	return 0;		
 }
 
+//Change permission of a file
+int
+serve_chown(envid_t envid, union Fsipc *req)
+{
+	struct OpenFile* po;
+	int r;
+	if ((r=openfile_lookup(envid, req->chown.req_fileid,&po))<0)
+		return r;
+	if ((r=file_set_uid(po->o_file,req->chown.uid))<0)
+		return r;
+	po->o_fd->uid = req->chown.uid;
+	return 0;		
+}
+
+//Change permission of a file
+int
+serve_chgrp(envid_t envid, union Fsipc *req)
+{
+	struct OpenFile* po;
+	int r;
+	if ((r=openfile_lookup(envid, req->chgrp.req_fileid,&po))<0)
+		return r;
+	if ((r=file_set_gid(po->o_file,req->chgrp.gid))<0)
+		return r;
+	po->o_fd->gid = req->chgrp.gid;
+	return 0;		
+}
+
+
 typedef int (*fshandler)(envid_t envid, union Fsipc *req);
 
 fshandler handlers[] = {
@@ -369,7 +398,10 @@ fshandler handlers[] = {
 	[FSREQ_FLUSH] =		(fshandler)serve_flush,
 	[FSREQ_REMOVE] =	(fshandler)serve_remove,
 	[FSREQ_SYNC] =		serve_sync,
-	[FSREQ_CHMOD] =         serve_chmod
+	[FSREQ_CHMOD] =         serve_chmod,
+	[FSREQ_CHOWN] =         serve_chown,
+	[FSREQ_CHGRP] =         serve_chgrp
+	
 };
 #define NHANDLERS (sizeof(handlers)/sizeof(handlers[0]))
 
@@ -385,6 +417,10 @@ has_perm(envid_t envid,union Fsipc *fsreq, uint32_t req) {
 	//root bypasses all permission checks
 	if (env.env_uid==0)
 		return 0;
+
+	//only root can use chown
+	if (req==FSREQ_CHOWN)
+		return -E_BAD_PERM;
 
 	//exceptional cases: doesn't require permissions
 	//file sync
@@ -466,6 +502,9 @@ has_perm(envid_t envid,union Fsipc *fsreq, uint32_t req) {
 	{	       
 		switch (req)
 		{
+		case FSREQ_CHGRP:
+			fileid = fsreq->chgrp.req_fileid;
+			break;
 		case FSREQ_CHMOD:
 			fileid = fsreq->chmod.req_fileid;
 			break;
@@ -500,6 +539,12 @@ has_perm(envid_t envid,union Fsipc *fsreq, uint32_t req) {
 		//compare permissions of fd with env
 		switch (req)
 		{
+		case FSREQ_CHGRP:
+			if (fd->uid==env.env_uid && fd->gid==env.env_gid)
+				r = 0;
+			else
+				r = -E_BAD_PERM;
+			break;			
 	        case FSREQ_CHMOD:
 			if (fd->uid==env.env_uid)
 				r = 0;

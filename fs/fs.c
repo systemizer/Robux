@@ -541,6 +541,25 @@ file_set_perm(struct File *f, fsperm_t newperm)
 	return 0;
 }
 
+//Set the permission of file f
+int 
+file_set_uid(struct File *f, uid_t uid)
+{
+	f->f_uid = uid;
+	flush_block(f);
+	return 0;
+}
+
+//Set the permission of file f
+int 
+file_set_gid(struct File *f,gid_t gid)
+{
+	f->f_gid = gid;
+	flush_block(f);
+	return 0;
+}
+
+
 // Flush the contents and metadata of file f out to disk.
 // Loop over all the blocks in file.
 // Translate the file block number into a disk block number

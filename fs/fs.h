@@ -39,6 +39,8 @@ void	file_flush(struct File *f);
 int	file_remove(const char *path);
 void	fs_sync(void);
 int     file_set_perm(struct File *f, fsperm_t newperm);
+int     file_set_uid(struct File *f, uid_t uid);
+int     file_set_gid(struct File *f, gid_t gid);
 
 /* int	map_block(uint32_t); */
 bool	block_is_free(uint32_t blockno);

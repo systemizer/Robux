@@ -323,6 +323,40 @@ fchmod(int fdnum, fsperm_t newperm)
 
 }
 
+// Modify the owner for a file opened by the given fd
+int
+fchown(int fdnum, uid_t uid)
+{
+	int r;
+	struct Fd *fd;
+	struct Dev *dev;
+
+	if ((r = fd_lookup(fdnum, &fd)) < 0
+	    || (r = dev_lookup(fd->fd_dev_id, &dev)) < 0)
+		return r;
+	if (!dev->dev_chown)
+		return -E_NOT_SUPP;
+	return (*dev->dev_chown)(fd, uid);
+}
+
+// Modify the permissions for a file opened by the given fd
+int
+fchgrp(int fdnum, gid_t gid)
+{
+	int r;
+	struct Fd *fd;
+	struct Dev *dev;
+
+	if ((r = fd_lookup(fdnum, &fd)) < 0
+	    || (r = dev_lookup(fd->fd_dev_id, &dev)) < 0)
+		return r;
+	if (!dev->dev_chgrp)
+		return -E_NOT_SUPP;
+	return (*dev->dev_chgrp)(fd, gid);
+
+
+}
+
 int
 fstat(int fdnum, struct Stat *stat)
 {

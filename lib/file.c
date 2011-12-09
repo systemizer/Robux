@@ -34,6 +34,9 @@ static ssize_t devfile_write(struct Fd *fd, const void *buf, size_t n);
 static int devfile_stat(struct Fd *fd, struct Stat *stat);
 static int devfile_trunc(struct Fd *fd, off_t newsize);
 static int devfile_chmod(struct Fd *fd, fsperm_t newperm);
+static int devfile_chown(struct Fd *fd, uid_t uid);
+static int devfile_chgrp(struct Fd *fd, gid_t gid);
+
 
 struct Dev devfile =
 {
@@ -44,7 +47,9 @@ struct Dev devfile =
 	.dev_close =	devfile_flush,
 	.dev_stat =	devfile_stat,
 	.dev_trunc =	devfile_trunc,
-	.dev_chmod =    devfile_chmod
+	.dev_chmod =    devfile_chmod,
+	.dev_chown =    devfile_chown,
+	.dev_chgrp =    devfile_chgrp
 };
 
 // Open a file (or directory).
@@ -181,7 +186,7 @@ devfile_trunc(struct Fd *fd, off_t newsize)
 	return fsipc(FSREQ_SET_SIZE, NULL);
 }
 
-// Truncate or extend an open file to 'size' bytes
+
 static int
 devfile_chmod(struct Fd *fd, fsperm_t newperm)
 {
@@ -189,6 +194,25 @@ devfile_chmod(struct Fd *fd, fsperm_t newperm)
 	fsipcbuf.chmod.f_perm = newperm;
 	return fsipc(FSREQ_CHMOD, NULL);
 }
+
+
+static int
+devfile_chown(struct Fd *fd, uid_t uid)
+{
+	fsipcbuf.chown.req_fileid = fd->fd_file.id;
+	fsipcbuf.chown.uid = uid;
+	return fsipc(FSREQ_CHOWN, NULL);
+}
+
+
+static int
+devfile_chgrp(struct Fd *fd, gid_t gid)
+{
+	fsipcbuf.chgrp.req_fileid = fd->fd_file.id;
+	fsipcbuf.chgrp.gid = gid;
+	return fsipc(FSREQ_CHGRP, NULL);
+}
+
 
 
 

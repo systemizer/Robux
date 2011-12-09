@@ -7,7 +7,6 @@ atoi_octal(char *str)
 	int end,i;
 	int ret=0;
 	int str_len = strlen(str);
-	cprintf("%d\n",str_len);
 
 	for (end=0;end<str_len;end++)
 	{
@@ -55,20 +54,21 @@ umain(int argc, char **argv)
 	char *perm_str = argv[1];
 	fsperm_t perm; 
 
+
 	if (strlen(perm_str)>3) 
 	{
-		printf("invalid permission argument: %s",perm_str);
+		printf("invalid permission argument: %s\n",perm_str);
 	} 
 	else 
 	{
 		perm = (fsperm_t)atoi_octal(perm_str);       
-		for (i=2;i<=argc;i++) {
+		for (i=2; i<argc; i++) {
 			fdnum = open(argv[i],O_RDONLY);		
 			if (fdnum<0)
 				printf("can't open %s: %e\n",argv[i],fdnum);
 			else {			       			     
 				if ((r=fchmod(fdnum,perm))<0)
-					printf("chmod failed\n");	     
+					printf("chmod failed: %e\n", r);	     
 			}
 			close(fdnum);
 		}

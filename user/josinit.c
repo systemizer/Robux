@@ -22,7 +22,7 @@ umain(int argc, char **argv)
 	close(fd);
 
 	cprintf("icode: spawn /init\n");
-	if ((r = spawnl("/oldinit", "init", "initarg1", "initarg2", (char*)0)) < 0)
+	if ((r = spawnl("/init", "init", "initarg1", "initarg2", (char*)0)) < 0)
 		panic("icode: spawn /init: %e", r);
 
 	cprintf("icode: exiting\n");

@@ -112,7 +112,7 @@ KERN_BINFILES += security/secserv \
 		 user/testsec \
 		 user/login \
 		 user/telnetd \
-		 user/chmod
+		 user/josinit
 
 
 KERN_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(KERN_SRCFILES))

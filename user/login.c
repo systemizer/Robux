@@ -55,7 +55,7 @@ login(int forever)
 		username[NAME_LEN-1] = '\0';
 
 		// Disable remote echo if not console
-		if(!iscons(1))
+		if(!iscons(1) && 0)
 		{
 			char d1 = 0xFF;
 			char d2 = 0xFD;
@@ -73,7 +73,7 @@ login(int forever)
 		}
 
 		// Enable remote echo if not console
-		if(!iscons(1))
+		if(!iscons(1) && 0)
 		{
 			char d1 = 0xFF;
 			char d2 = 0xFE;

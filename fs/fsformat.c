@@ -117,7 +117,7 @@ opendisk(const char *name)
 
 	super->s_root.f_uid = 0;
 	super->s_root.f_gid = 0;
-	super->s_root.f_perm = DEFAULT_DIR_CREATE_PERM;
+	super->s_root.f_perm = DEFAULT_DIR_CREATE_PERM | FSP_A_R | FSP_A_W | FSP_A_X;
 
 
 	nbitblocks = (nblocks + BLKBITSIZE - 1) / BLKBITSIZE;

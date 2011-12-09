@@ -14,6 +14,7 @@
 #include <inc/security.h>
 #include <security/secipc.h>
 #include <inc/mmu.h>
+#include <contrib/sha2/sha2.h>
 
 // Put the buffers to pass in IPC at a fixed location below UTOP but
 // above the range owned by malloc
@@ -189,6 +190,19 @@ get_user_arr(struct user_info **arrptr, uint32_t *count_ret)
 }
 
 
+void
+hash_pass(char *input, char *buf)
+{
+	strncpy(buf, "{JOS}", PASS_LEN);
+
+	char output[SHA256_DIGEST_STRING_LENGTH];
+
+	SHA256_Data((uint8_t*)input, strlen(input), output);
+
+	strcat(buf, output);
+}
+
+
 // Main server receive loop
 void 
 recv_loop()
@@ -291,8 +305,13 @@ recv_loop()
 					break;
 				}
 
+				char temp[PASS_LEN];
+				memset(temp, 0, PASS_LEN);
+				hash_pass(request_buf->verify_req.pass, temp);
+				int comp = strncmp(req_user->ui_pass, temp, PASS_LEN);
+
 				// Return true for now
-				ipc_send(from, 0, NULL, 0);
+				ipc_send(from, (comp == 0)?0:1, NULL, 0);
 
 				break;
 			default:

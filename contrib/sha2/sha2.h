@@ -55,6 +55,7 @@ extern "C" {
 #endif /* SHA2_USE_INTTYPES_H */
 
 
+// Added for JOS
 #define SHA2_USE_INTTYPES_H
 
 

@@ -161,6 +161,9 @@ int verify_password(uid_t, char *pass);
 uid_t getuid();
 gid_t getgid();
 
+
+void base64(char *, char *, int inlen, int outlen);
+
 /* File open modes */
 #define	O_RDONLY	0x0000		/* open for reading only */
 #define	O_WRONLY	0x0001		/* open for writing only */

@@ -438,17 +438,20 @@ has_perm(envid_t envid,union Fsipc *fsreq, uint32_t req) {
 		switch (req)
 		{
 		case FSREQ_OPEN:
-			//if creating a new file, return 0
-			if ((fsreq->open.req_omode&~O_ACCMODE)==(O_CREAT|O_TRUNC))
-				return 0;
 
 			// Copy in the path, making sure it's null-terminated
 			memmove(path, fsreq->open.req_path, MAXPATHLEN);
 			path[MAXPATHLEN-1] = 0;
-			
+
+
 			//populate pf with struct File
-			if ((r=file_open(path,&pf))<0)
+			if ((r=file_open(path,&pf))<0 && r!=-E_NOT_FOUND)
 				return r;
+			
+			//if creating a new file, return 0
+			if ((fsreq->open.req_omode&~O_ACCMODE)==(O_CREAT|O_TRUNC) && r==-E_NOT_FOUND) 				
+				return 0;
+				
 			
 			switch(fsreq->open.req_omode&O_ACCMODE)
 			{

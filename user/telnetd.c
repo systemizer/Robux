@@ -23,9 +23,11 @@ handle_client(int clientsock)
 	{
 		dup(clientsock, 0);
 		dup(clientsock, 1);
-		r = spawnl("login", "-t",  NULL);
+		r = spawnl("login", "login", "-t",  NULL);
 		wait(r);
-		close(clientsock);
+		close(0);
+		close(1);
+		exit();
 	}
 
 	close(clientsock);

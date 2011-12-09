@@ -39,7 +39,8 @@ USERAPPS :=		$(USERAPPS) \
 			$(OBJDIR)/user/sha2speed \
 			$(OBJDIR)/user/testmalloc \
 			$(OBJDIR)/user/chmod \
-			$(OBJDIR)/user/chown
+			$(OBJDIR)/user/chown \
+			$(OBJDIR)/user/chgrp
 
 FSIMGTXTFILES :=	$(FSIMGTXTFILES) \
 			fs/lorem \

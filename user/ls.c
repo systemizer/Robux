@@ -40,6 +40,8 @@ lsdir(const char *path, const char *prefix)
 			{
 				memset(&st, 0, sizeof(st));
 				strncpy(st.st_name, f.f_name, MAXNAMELEN);
+				st.st_uid = 0xFFFF;
+				st.st_gid = r;
 				st.st_size = r;
 			}
 			ls2(prefix, &st);
@@ -68,13 +70,20 @@ ls2(const char *prefix, struct Stat *f)
 				(f->st_perm & FSP_A_X) ? 'x':'-');
 
 		struct user_info info;
-		int r = get_user_by_id(f->st_uid, &info);
-		if(r < 0)
-			printf("%d ", f->st_uid);
+		int r;
+		if(f->st_uid != 0xFFFF)
+			r = get_user_by_id(f->st_uid, &info);
 		else
-			printf("%s ", info.ui_name); 
+		{
+			r = 0;
+			strcpy(info.ui_name, "?unknown?");
+		}
+		if(r < 0)
+			printf("%15d ", f->st_uid);
+		else
+			printf("%15s ", info.ui_name); 
 
-		printf("%d %11d %s\n", f->st_gid, f->st_size, f->st_name);
+		printf("%5d %11d %s\n", f->st_gid, f->st_size, f->st_name);
 	}
 	else
 	{

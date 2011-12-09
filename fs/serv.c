@@ -466,6 +466,9 @@ has_perm(envid_t envid,union Fsipc *fsreq, uint32_t req) {
 	{	       
 		switch (req)
 		{
+		case FSREQ_CHMOD:
+			fileid = fsreq->chmod.req_fileid;
+			break;
 		case FSREQ_READ:
 			fileid = fsreq->read.req_fileid;
 			break;
@@ -497,6 +500,12 @@ has_perm(envid_t envid,union Fsipc *fsreq, uint32_t req) {
 		//compare permissions of fd with env
 		switch (req)
 		{
+	        case FSREQ_CHMOD:
+			if (fd->uid==env.env_uid)
+				r = 0;
+			else
+				r = -E_BAD_PERM;
+			break;
 	        //These require the READ bit
 		case FSREQ_READ:
 		case FSREQ_STAT:

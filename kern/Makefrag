@@ -111,7 +111,8 @@ KERN_BINFILES +=	user/testpteshare \
 KERN_BINFILES += security/secserv \
 		 user/testsec \
 		 user/login \
-		 user/telnetd
+		 user/telnetd \
+		 user/chmod
 
 
 KERN_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(KERN_SRCFILES))

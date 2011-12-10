@@ -105,7 +105,13 @@ int
 nsipc_send(int s, const void *buf, int size, unsigned int flags)
 {
 	nsipcbuf.send.req_s = s;
-	assert(size < 1600);
+
+	if(size > 1599)
+	{
+		printf("network: packet too big\n");
+		return -E_INVAL;
+	}
+
 	memmove(&nsipcbuf.send.req_buf, buf, size);
 	nsipcbuf.send.req_size = size;
 	nsipcbuf.send.req_flags = flags;

@@ -451,6 +451,10 @@ has_perm(envid_t envid,union Fsipc *fsreq, uint32_t req) {
 			//if creating a new file, return 0
 			if ((fsreq->open.req_omode&~O_ACCMODE)==(O_CREAT|O_TRUNC) && r==-E_NOT_FOUND) 				
 				return 0;
+
+			// Get out of here if there is no file to open
+			if(r == -E_NOT_FOUND)
+					return r;
 				
 			
 			switch(fsreq->open.req_omode&O_ACCMODE)
@@ -485,6 +489,8 @@ has_perm(envid_t envid,union Fsipc *fsreq, uint32_t req) {
 			//populate pf with struct File
 			if ((r=file_open(path,&pf))<0)
 				return r;
+
+			cprintf("0x%x %d\n", pf, r);
 
 			//permissions logic
 			if ((pf->f_uid==env.env_uid && pf->f_perm&FSP_O_W) ||
@@ -615,8 +621,7 @@ serve(void)
 			r = -E_INVAL;
 			}
 		}
-		else
-			r = -E_BAD_PERM;
+		// Return, either the result of has_perm or the op
 		ipc_send(whom, r, pg, perm);
 		sys_page_unmap(0, fsreq);
 	}

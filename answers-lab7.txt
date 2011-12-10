@@ -1,4 +1,36 @@
 Chris:
+Our project was the addition of users and security to JOS.
+
+There are three parts to this security system:
+1. User Authentication - Check user/password pairs to grant access to system
+2. File Permissions - Permissions are associated with each file and
+	may be used to determine what a specific user may do with a file.
+3. Environment Permissions - Associate a user and group with each
+	running environment, and use this to restrict access to protected 
+	resources. The FS server uses this in file permission checking, and the
+	network server uses this to restrict access to reserved port numbers.
+
+The SECURITY SERVER manages user authentication. Users and their
+associated password hashes are stored in the /passwd file on disk.
+The security server's interface consists of: get_user_by_id, 
+get_user_by_name, and verify_password. The first two functions 
+are used to return a struct user_info with information about the user
+referenced by name or uid. The last function is used to verify a 
+uid/password pair to grant access for login. The security server runs
+as the root user, and is therefore able to access the /passwd file for 
+reading.
+
+The /passwd file follows the standard Linux format. Users are entered 
+one per line and consist of: username, hashed password, uid, gid, comments,
+home directory, and shell. The password hash uses a nonstandard 
+option. Hashes are simple SHA-256 hashes of the password prefixed
+with "{JOS}" to tell them apart from the various crypt(3) implementations.
+An open source SHA-2 library is used in the contrib/ folder of the repo.
+
+File system permissions were added through the addition of new 
+fields to struct File. These fields give the owner uid, gid, and 
+permissions. The permissions are the standard octal permissions used
+in Linux without support for sticky or set{uid,gid} bits.
 
 
 

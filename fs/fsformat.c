@@ -173,7 +173,7 @@ diradd(struct Dir *d, uint32_t type, const char *name)
 	out->f_gid = 0;
 	if(type == FTYPE_DIR)
 		out->f_perm = DEFAULT_DIR_CREATE_PERM;
-	else if(strcmp(name, "testkbd") != 0)
+	else if(strcmp(name, "passwd") != 0)
 		out->f_perm = DEFAULT_FILE_CREATE_PERM;
 	else
 		out->f_perm = 0;

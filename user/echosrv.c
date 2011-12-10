@@ -10,7 +10,7 @@
 static void
 die(char *m)
 {
-	cprintf("%s\n", m);
+	printf("%s\n", m);
 	exit();
 }
 
@@ -49,7 +49,7 @@ umain(int argc, char **argv)
 	if ((serversock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
 		die("Failed to create socket");
 
-	cprintf("opened socket\n");
+	printf("opened socket\n");
 
 	// Construct the server sockaddr_in structure
 	memset(&echoserver, 0, sizeof(echoserver));       // Clear struct
@@ -57,7 +57,7 @@ umain(int argc, char **argv)
 	echoserver.sin_addr.s_addr = htonl(INADDR_ANY);   // IP address
 	echoserver.sin_port = htons(PORT);		  // server port
 
-	cprintf("trying to bind\n");
+	printf("trying to bind\n");
 
 	// Bind the server socket
 	if (bind(serversock, (struct sockaddr *) &echoserver,
@@ -69,7 +69,7 @@ umain(int argc, char **argv)
 	if (listen(serversock, MAXPENDING) < 0)
 		die("Failed to listen on server socket");
 
-	cprintf("bound\n");
+	printf("bound\n");
 
 	// Run until canceled
 	while (1) {
@@ -80,7 +80,7 @@ umain(int argc, char **argv)
 			    &clientlen)) < 0) {
 			die("Failed to accept client connection");
 		}
-		cprintf("Client connected: %s\n", inet_ntoa(echoclient.sin_addr));
+		printf("Client connected: %s\n", inet_ntoa(echoclient.sin_addr));
 		handle_client(clientsock);
 	}
 

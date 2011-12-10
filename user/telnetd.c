@@ -7,7 +7,7 @@
 
 void die(const char *msg, int error_code)
 {
-	cprintf(msg, error_code);
+	printf(msg, error_code);
 	exit();
 }
 

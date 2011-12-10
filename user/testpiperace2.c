@@ -8,7 +8,7 @@ umain(int argc, char **argv)
 	struct Fd *fd;
 	const volatile struct Env *kid;
 
-	cprintf("testing for pipeisclosed race...\n");
+	printf("testing for pipeisclosed race...\n");
 	if ((r = pipe(p)) < 0)
 		panic("pipe: %e", r);
 	if ((r = fork()) < 0)
@@ -20,7 +20,7 @@ umain(int argc, char **argv)
 		close(p[1]);
 		for (i = 0; i < 200; i++) {
 			if (i % 10 == 0)
-				cprintf("%d.", i);
+				printf("%d.", i);
 			// dup, then close.  yield so that other guy will
 			// see us while we're between them.
 			dup(p[0], 10);
@@ -55,15 +55,15 @@ umain(int argc, char **argv)
 	kid = &envs[ENVX(r)];
 	while (kid->env_status == ENV_RUNNABLE)
 		if (pipeisclosed(p[0]) != 0) {
-			cprintf("\nRACE: pipe appears closed\n");
+			printf("\nRACE: pipe appears closed\n");
 			sys_env_destroy(r);
 			exit();
 		}
-	cprintf("child done with loop\n");
+	printf("child done with loop\n");
 	if (pipeisclosed(p[0]))
 		panic("somehow the other end of p[0] got closed!");
 	if ((r = fd_lookup(p[0], &fd)) < 0)
 		panic("cannot look up p[0]: %e", r);
 	(void) fd2data(fd);
-	cprintf("race didn't happen\n");
+	printf("race didn't happen\n");
 }

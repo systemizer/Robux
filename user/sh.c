@@ -12,8 +12,8 @@ int debug = 0;
 // tokens from the string.
 int gettoken(char *s, char **token);
 
-// Change all cprintfs to printfs very messily
-#define cprintf printf
+// Change all printfs to printfs very messily
+#define printf printf
 
 
 // Parse a shell command from string 's' and execute it.
@@ -81,7 +81,7 @@ again:
 				exit();
 			}
 			if (debug)
-				cprintf("PIPE: %d %d\n", p[0], p[1]);
+				printf("PIPE: %d %d\n", p[0], p[1]);
 			if ((r = fork()) < 0) {
 				printf("fork: %e\n", r);
 				exit();
@@ -120,7 +120,7 @@ runit:
 	// Return immediately if command line was empty.
 	if(argc == 0) {
 		if (debug)
-			cprintf("EMPTY COMMAND\n");
+			printf("EMPTY COMMAND\n");
 		return;
 	}
 
@@ -137,10 +137,10 @@ runit:
 
 	// Print the command.
 	if (debug) {
-		cprintf("[%08x] SPAWN:", thisenv->env_id);
+		printf("[%08x] SPAWN:", thisenv->env_id);
 		for (i = 0; argv[i]; i++)
-			cprintf(" %s", argv[i]);
-		cprintf("\n");
+			printf(" %s", argv[i]);
+		printf("\n");
 	}
 
 	// Spawn the command!
@@ -152,20 +152,20 @@ runit:
 	close_all();
 	if (r >= 0) {
 		if (debug)
-			cprintf("[%08x] WAIT %s %08x\n", thisenv->env_id, argv[0], r);
+			printf("[%08x] WAIT %s %08x\n", thisenv->env_id, argv[0], r);
 		wait(r);
 		if (debug)
-			cprintf("[%08x] wait finished\n", thisenv->env_id);
+			printf("[%08x] wait finished\n", thisenv->env_id);
 	}
 
 	// If we were the left-hand part of a pipe,
 	// wait for the right-hand part to finish.
 	if (pipe_child) {
 		if (debug)
-			cprintf("[%08x] WAIT pipe_child %08x\n", thisenv->env_id, pipe_child);
+			printf("[%08x] WAIT pipe_child %08x\n", thisenv->env_id, pipe_child);
 		wait(pipe_child);
 		if (debug)
-			cprintf("[%08x] wait finished\n", thisenv->env_id);
+			printf("[%08x] wait finished\n", thisenv->env_id);
 	}
 
 	// Done!
@@ -194,12 +194,12 @@ _gettoken(char *s, char **p1, char **p2)
 
 	if (s == 0) {
 		if (debug > 1)
-			cprintf("GETTOKEN NULL\n");
+			printf("GETTOKEN NULL\n");
 		return 0;
 	}
 
 	if (debug > 1)
-		cprintf("GETTOKEN: %s\n", s);
+		printf("GETTOKEN: %s\n", s);
 
 	*p1 = 0;
 	*p2 = 0;
@@ -208,7 +208,7 @@ _gettoken(char *s, char **p1, char **p2)
 		*s++ = 0;
 	if (*s == 0) {
 		if (debug > 1)
-			cprintf("EOL\n");
+			printf("EOL\n");
 		return 0;
 	}
 	if (strchr(SYMBOLS, *s)) {
@@ -217,7 +217,7 @@ _gettoken(char *s, char **p1, char **p2)
 		*s++ = 0;
 		*p2 = s;
 		if (debug > 1)
-			cprintf("TOK %c\n", t);
+			printf("TOK %c\n", t);
 		return t;
 	}
 	*p1 = s;
@@ -227,7 +227,7 @@ _gettoken(char *s, char **p1, char **p2)
 	if (debug > 1) {
 		t = **p2;
 		**p2 = 0;
-		cprintf("WORD: %s\n", *p1);
+		printf("WORD: %s\n", *p1);
 		**p2 = t;
 	}
 	return 'w';
@@ -253,7 +253,7 @@ gettoken(char *s, char **p1)
 void
 usage(void)
 {
-	cprintf("usage: sh [-dix] [command-file]\n");
+	printf("usage: sh [-dix] [command-file]\n");
 	exit();
 }
 
@@ -314,17 +314,17 @@ umain(int argc, char **argv)
 		buf = readline(interactive ? prompt : NULL);
 		if (buf == NULL) {
 			if (debug)
-				cprintf("EXITING\n");
+				printf("EXITING\n");
 			exit();	// end of file
 		}
 		if (debug)
-			cprintf("LINE: %s\n", buf);
+			printf("LINE: %s\n", buf);
 		if (buf[0] == '#')
 			continue;
 		if (echocmds)
 			printf("# %s\n", buf);
 		if (debug)
-			cprintf("BEFORE FORK\n");
+			printf("BEFORE FORK\n");
 
 		if(strncmp(buf, "exit", 4) == 0)
 			exit();
@@ -332,7 +332,7 @@ umain(int argc, char **argv)
 		if ((r = fork()) < 0)
 			panic("fork: %e", r);
 		if (debug)
-			cprintf("FORK: %d\n", r);
+			printf("FORK: %d\n", r);
 		if (r == 0) {
 			runcmd(buf);
 			exit();

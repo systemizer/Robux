@@ -38,15 +38,15 @@ check_regs(struct regs* a, const char *an, struct regs* b, const char *bn,
 {
 	int mismatch = 0;
 
-	cprintf("%-6s %-8s %-8s\n", "", an, bn);
+	printf("%-6s %-8s %-8s\n", "", an, bn);
 
 #define CHECK(name, field)						\
 	do {								\
-		cprintf("%-6s %08x %08x ", #name, a->field, b->field);	\
+		printf("%-6s %08x %08x ", #name, a->field, b->field);	\
 		if (a->field == b->field)				\
-			cprintf("OK\n");				\
+			printf("OK\n");				\
 		else {							\
-			cprintf("MISMATCH\n");				\
+			printf("MISMATCH\n");				\
 			mismatch = 1;					\
 		}							\
 	} while (0)
@@ -64,11 +64,11 @@ check_regs(struct regs* a, const char *an, struct regs* b, const char *bn,
 
 #undef CHECK
 
-	cprintf("Registers %s ", testname);
+	printf("Registers %s ", testname);
 	if (!mismatch)
-		cprintf("OK\n");
+		printf("OK\n");
 	else
-		cprintf("MISMATCH\n");
+		printf("MISMATCH\n");
 }
 
 static void
@@ -139,7 +139,7 @@ umain(int argc, char **argv)
 	// correctly (of course, we probably wouldn't get this far if
 	// it weren't)
 	if (*(int*)UTEMP != 42)
-		cprintf("EIP after page-fault MISMATCH\n");
+		printf("EIP after page-fault MISMATCH\n");
 	after.eip = before.eip;
 
 	check_regs(&before, "before", &after, "after", "after page-fault");

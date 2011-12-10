@@ -11,7 +11,7 @@ const char *msg = "Hello world!\n";
 static void
 die(char *m)
 {
-	cprintf("%s\n", m);
+	printf("%s\n", m);
 	exit();
 }
 
@@ -23,14 +23,14 @@ void umain(int argc, char **argv)
 	unsigned int echolen;
 	int received = 0;
 
-	cprintf("Connecting to:\n");
-	cprintf("\tip address %s = %x\n", IPADDR, inet_addr(IPADDR));
+	printf("Connecting to:\n");
+	printf("\tip address %s = %x\n", IPADDR, inet_addr(IPADDR));
 
 	// Create the TCP socket
 	if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
 		die("Failed to create socket");
 
-	cprintf("opened socket\n");
+	printf("opened socket\n");
 
 	// Construct the server sockaddr_in structure
 	memset(&echoserver, 0, sizeof(echoserver));       // Clear struct
@@ -38,13 +38,13 @@ void umain(int argc, char **argv)
 	echoserver.sin_addr.s_addr = inet_addr(IPADDR);   // IP address
 	echoserver.sin_port = htons(PORT);		  // server port
 
-	cprintf("trying to connect to server\n");
+	printf("trying to connect to server\n");
 
 	// Establish connection
 	if (connect(sock, (struct sockaddr *) &echoserver, sizeof(echoserver)) < 0)
 		die("Failed to connect with server");
 
-	cprintf("connected to server\n");
+	printf("connected to server\n");
 
 	// Send the word to the server
 	echolen = strlen(msg);
@@ -52,7 +52,7 @@ void umain(int argc, char **argv)
 		die("Mismatch in number of sent bytes");
 
 	// Receive the word back from the server
-	cprintf("Received: \n");
+	printf("Received: \n");
 	while (received < echolen) {
 		int bytes = 0;
 		if ((bytes = read(sock, buffer, BUFFSIZE-1)) < 1) {
@@ -60,9 +60,9 @@ void umain(int argc, char **argv)
 		}
 		received += bytes;
 		buffer[bytes] = '\0';        // Assure null terminated string
-		cprintf(buffer);
+		printf(buffer);
 	}
-	cprintf("\n");
+	printf("\n");
 
 	close(sock);
 }

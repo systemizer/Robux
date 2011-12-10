@@ -36,3 +36,18 @@ in Linux without support for sticky or set{uid,gid} bits.
 
 
 Rob:
+
+Login:
+We created a seperate login environment that will prompt the user for a username and password. The login environment communicates via IPC with the security server, which authenticates the user. If the user successfully enters a correct username and password, the login environment will spawn a new shell environment that has the UID (user id) specified by the security response.
+
+Filesystem Permission Check:
+We've added an additional check to the filesystem when the file server recieves an IPC. Before it starts reacting to the incoming IPC message, the server calls has_perm, which will determine whether the calling environment has the correct permissions to execute what is requesting to do. The permissions are calculated via the file descriptor's gid,uid, and perm fields agains the calling environment's gid,uid, and request type (i.e. FSREQ_OPEN). The has_perm function handles each request type differently.
+
+chown:
+The chown command takes in a username and filename, and it changes the owner of that file. It uses the security server to retrieve the uid of the user argument and sends off an IPC to the file server. The file server only lets the root user execute the Chown command. This command can take in and execute on an arbitrary number of files.
+
+chgrp:
+The chgrp command takes in a gid (group id) and filename, and it changes the group of that file. This sends an IPC to the file server, which checks to makes sure that the calling environment is both the owner of the file and is in the group identified by the gid argument. If these checks pass, then the file server changes the file's gid to the inputted gid. This command can take in and execute on an arbitrary number of files
+
+chmod:
+The chmod command takes in a octal number and filename, and it changes the file's permission to the inputted octal. The octal must be 3 octal digits, else the command will complain. chmod sends an IPC to the file server, which will make sure the calling environment is the owner of that file (only the owner or root can execute this command). If that check passes, the file permission is changed to the input octal provided by the user.

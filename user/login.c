@@ -28,7 +28,7 @@ login(int forever)
 	struct user_info info;
 	char * buf;
 
-	cprintf("initializing login environment\n");
+	printf("initializing login environment\n");
 	login_init();
 
 	if(getuid() != 0)

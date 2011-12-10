@@ -33,7 +33,7 @@ umain(int argc, char **argv)
 		panic("ran on two CPUs at once (counter is %d)", counter);
 
 	// Check that we see environments running on different CPUs
-	cprintf("[%08x] stresssched on CPU %d\n", thisenv->env_id, thisenv->env_cpunum);
+	printf("[%08x] stresssched on CPU %d\n", thisenv->env_id, thisenv->env_cpunum);
 
 }
 

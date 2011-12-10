@@ -1,5 +1,24 @@
-Chris:
 Our project was the addition of users and security to JOS.
+
+QUICK START:
+To run our custom init run: 'make run-josinit-nox' to drop to a login
+prompt.
+
+To run a telnet server run: 'make run-telnetd-nox' and connect on forwarded
+port 23 to get to a login prompt. Please note that PASSWORDS ARE ECHOED
+BY THE LOCAL TERMINAL ON TELNET CONNECTIONS AND ARE VISIBLE ON SCREEN. 
+Clients we have tested do not comply with the command bytes that should
+disable this behavior, so we have stopped sending them.
+
+USER LIST:
+
+    Name  |    Password
+----------+-------------
+    root  |    hello
+ crjohns  |    hello
+rmcqueen  |    hello    
+
+FULL DESCRIPTION:
 
 There are three parts to this security system:
 1. User Authentication - Check user/password pairs to grant access to system
@@ -10,7 +29,8 @@ There are three parts to this security system:
 	resources. The FS server uses this in file permission checking, and the
 	network server uses this to restrict access to reserved port numbers.
 
-The SECURITY SERVER manages user authentication. Users and their
+Security Server:
+The security server manages user authentication. Users and their
 associated password hashes are stored in the /passwd file on disk.
 The security server's interface consists of: get_user_by_id, 
 get_user_by_name, and verify_password. The first two functions 
@@ -20,34 +40,101 @@ uid/password pair to grant access for login. The security server runs
 as the root user, and is therefore able to access the /passwd file for 
 reading.
 
-The /passwd file follows the standard Linux format. Users are entered 
-one per line and consist of: username, hashed password, uid, gid, comments,
-home directory, and shell. The password hash uses a nonstandard 
-option. Hashes are simple SHA-256 hashes of the password prefixed
-with "{JOS}" to tell them apart from the various crypt(3) implementations.
+passwd File:
+The /passwd file follows the standard Linux format (without shadow). 
+Users are entered one per line and consist of: 
+username, hashed password, uid, gid, comments, home directory, and shell.
+The password hash uses a nonstandard option. Hashes are simple 
+SHA-256 hashes in base 16 of the password prefixed with "{JOS}" to 
+tell them apart from the various crypt(3) implementations.
 An open source SHA-2 library is used in the contrib/ folder of the repo.
 
+File System Permissions:
 File system permissions were added through the addition of new 
 fields to struct File. These fields give the owner uid, gid, and 
 permissions. The permissions are the standard octal permissions used
-in Linux without support for sticky or set{uid,gid} bits.
+in Linux without support for sticky or set{uid,gid} bits. These 
+permissions are checked by the file server, as described in a section
+below.
 
+File System Format:
+The format code was modified to take permissions into account by setting
+each file to have a default set of permissions. The passwd file, however,
+has all permission bits set to 0 to prevent anyone but a root
+process from accessing it.
 
-
-
-Rob:
-
-Login:
-We created a seperate login environment that will prompt the user for a username and password. The login environment communicates via IPC with the security server, which authenticates the user. If the user successfully enters a correct username and password, the login environment will spawn a new shell environment that has the UID (user id) specified by the security response.
+Environment Permissions:
+We have added fields to environments that give their current uid and 
+gid of the process. These fields may be changed by new system calls
+sys_set_user_id and sys_set_group_id respectively. Only a process running
+as root may change the uid/gid of an environment. For example, the login
+environment running as root spawns a new environment and sets the user and
+group id of the new environment to the uid/gid of the authenticated
+user before allowing the environment to run. 
 
 Filesystem Permission Check:
-We've added an additional check to the filesystem when the file server recieves an IPC. Before it starts reacting to the incoming IPC message, the server calls has_perm, which will determine whether the calling environment has the correct permissions to execute what is requesting to do. The permissions are calculated via the file descriptor's gid,uid, and perm fields agains the calling environment's gid,uid, and request type (i.e. FSREQ_OPEN). The has_perm function handles each request type differently.
+We've added an additional check to the filesystem when the file server
+recieves an IPC. Before it starts reacting to the incoming IPC message, 
+the server calls has_perm, which will determine whether the calling
+environment has the correct permissions to execute what is requesting 
+to do. The permissions are calculated via the file descriptor's gid, 
+uid, and perm fields agains the calling environment's gid,uid, and 
+request type (i.e. FSREQ_OPEN). The has_perm function handles each 
+request type differently.
+
+
+We have created several programs to support users and file system 
+permissions.
+
+Login:
+We created a seperate login environment that will prompt the user for 
+a username and password. The login environment communicates via IPC 
+with the security server, which authenticates the user. If the 
+user successfully enters a correct username and password, the 
+login environment will spawn a new shell environment that has the 
+UID (user id) specified by the security response.
+
+Telnetd:
+We created a telnet server that will accept connections and pass them 
+through to a login environment. When the server accepts a connection it
+forks a new env to deal with that connection and returns back to the
+handling loop to get more connections. The handler process sets its 
+input and output file descriptors to point to the client socket for reads
+and writes, and then it spawns a login environment. All I/O for
+the login env and anything spawned by that automatically go through the
+socket to the connecting client. All user programs were modified to
+use printf instead of cprints so that their output goes over the socket
+correctly, and libmain was modified to automatically set up a connection
+to the console for input and output if an environment is started with no
+file descriptors.
+There is an issue with our telnet server accepting connections from
+Windows clients. Since our code used LF line endings while Windows clients
+insist on CRLF endings, their output will not print correctly. This
+was tested using Putty to connect from a Windows 7 machine. Linerva's 
+telnet works fine.
+
 
 chown:
-The chown command takes in a username and filename, and it changes the owner of that file. It uses the security server to retrieve the uid of the user argument and sends off an IPC to the file server. The file server only lets the root user execute the Chown command. This command can take in and execute on an arbitrary number of files.
+The chown command takes in a username and filename, and it changes 
+the owner of that file. It uses the security server to retrieve the 
+uid of the user argument and sends off an IPC to the file server. 
+The file server only lets the root user execute the Chown command. 
+This command can take in and execute on an arbitrary number of files.
 
 chgrp:
-The chgrp command takes in a gid (group id) and filename, and it changes the group of that file. This sends an IPC to the file server, which checks to makes sure that the calling environment is both the owner of the file and is in the group identified by the gid argument. If these checks pass, then the file server changes the file's gid to the inputted gid. This command can take in and execute on an arbitrary number of files
+The chgrp command takes in a gid (group id) and filename, and it 
+changes the group of that file. This sends an IPC to the file server, 
+which checks to makes sure that the calling environment is both the 
+owner of the file and is in the group identified by the gid argument. 
+If these checks pass, then the file server changes the file's gid to 
+the inputted gid. This command can take in and execute on an 
+arbitrary number of files.
 
 chmod:
-The chmod command takes in a octal number and filename, and it changes the file's permission to the inputted octal. The octal must be 3 octal digits, else the command will complain. chmod sends an IPC to the file server, which will make sure the calling environment is the owner of that file (only the owner or root can execute this command). If that check passes, the file permission is changed to the input octal provided by the user.
+The chmod command takes in a octal number and filename, and it changes 
+the file's permission to the inputted octal. The octal must be 3 
+octal digits, else the command will complain. chmod sends an IPC to 
+the file server, which will make sure the calling environment is the 
+owner of that file (only the owner or root can execute this command). 
+If that check passes, the file permission is changed to the input 
+octal provided by the user.

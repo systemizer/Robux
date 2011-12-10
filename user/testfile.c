@@ -37,24 +37,24 @@ umain(int argc, char **argv)
 		panic("serve_open /newmotd: %e", r);
 	if (FVA->fd_dev_id != 'f' || FVA->fd_offset != 0 || FVA->fd_omode != O_RDONLY)
 		panic("serve_open did not fill struct Fd correctly\n");
-	cprintf("serve_open is good\n");
+	printf("serve_open is good\n");
 
 	if ((r = devfile.dev_stat(FVA, &st)) < 0)
 		panic("file_stat: %e", r);
 	if (strlen(msg) != st.st_size)
 		panic("file_stat returned size %d wanted %d\n", st.st_size, strlen(msg));
-	cprintf("file_stat is good\n");
+	printf("file_stat is good\n");
 
 	memset(buf, 0, sizeof buf);
 	if ((r = devfile.dev_read(FVA, buf, sizeof buf)) < 0)
 		panic("file_read: %e", r);
 	if (strcmp(buf, msg) != 0)
 		panic("file_read returned wrong data");
-	cprintf("file_read is good\n");
+	printf("file_read is good\n");
 
 	if ((r = devfile.dev_close(FVA)) < 0)
 		panic("file_close: %e", r);
-	cprintf("file_close is good\n");
+	printf("file_close is good\n");
 
 	// We're about to unmap the FD, but still need a way to get
 	// the stale filenum to serve_read, so we make a local copy.
@@ -65,7 +65,7 @@ umain(int argc, char **argv)
 
 	if ((r = devfile.dev_read(&fdcopy, buf, sizeof buf)) != -E_INVAL)
 		panic("serve_read does not handle stale fileids correctly: %e", r);
-	cprintf("stale fileid is good\n");
+	printf("stale fileid is good\n");
 
 	// Try writing
 	if ((r = xopen("/new-file", O_RDWR|O_CREAT)) < 0)
@@ -73,7 +73,7 @@ umain(int argc, char **argv)
 
 	if ((r = devfile.dev_write(FVA, msg, strlen(msg))) != strlen(msg))
 		panic("file_write: %e", r);
-	cprintf("file_write is good\n");
+	printf("file_write is good\n");
 
 	FVA->fd_offset = 0;
 	memset(buf, 0, sizeof buf);
@@ -83,7 +83,7 @@ umain(int argc, char **argv)
 		panic("file_read after file_write returned wrong length: %d", r);
 	if (strcmp(buf, msg) != 0)
 		panic("file_read after file_write returned wrong data");
-	cprintf("file_read after file_write is good\n");
+	printf("file_read after file_write is good\n");
 
 	// Now we'll try out open
 	if ((r = open("/not-found", O_RDONLY)) < 0 && r != -E_NOT_FOUND)
@@ -96,7 +96,7 @@ umain(int argc, char **argv)
 	fd = (struct Fd*) (0xD0000000 + r*PGSIZE);
 	if (fd->fd_dev_id != 'f' || fd->fd_offset != 0 || fd->fd_omode != O_RDONLY)
 		panic("open did not fill struct Fd correctly\n");
-	cprintf("open is good\n");
+	printf("open is good\n");
 
 	// Try files with indirect blocks
 	if ((f = open("/big", O_WRONLY|O_CREAT)) < 0)
@@ -124,6 +124,6 @@ umain(int argc, char **argv)
 			      i, *(int*)buf);
 	}
 	close(f);
-	cprintf("large file is good\n");
+	printf("large file is good\n");
 }
 

@@ -3,7 +3,7 @@
 void
 usage(void)
 {
-	cprintf("usage: lsfd [-1]\n");
+	printf("usage: lsfd [-1]\n");
 	exit();
 }
 
@@ -28,7 +28,7 @@ umain(int argc, char **argv)
 					i, st.st_name, st.st_isdir,
 					st.st_size, st.st_dev->dev_name);
 			else
-				cprintf("fd %d: name %s isdir %d size %d dev %s\n",
+				printf("fd %d: name %s isdir %d size %d dev %s\n",
 					i, st.st_name, st.st_isdir,
 					st.st_size, st.st_dev->dev_name);
 		}

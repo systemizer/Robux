@@ -41,7 +41,7 @@ struct error_messages errors[] = {
 static void
 die(char *m)
 {
-	cprintf("%s\n", m);
+	printf("%s\n", m);
 	exit();
 }
 
@@ -341,7 +341,7 @@ umain(int argc, char **argv)
 	if (listen(serversock, MAXPENDING) < 0)
 		die("Failed to listen on server socket");
 
-	cprintf("Waiting for http connections...\n");
+	printf("Waiting for http connections...\n");
 
 	while (1) {
 		unsigned int clientlen = sizeof(client);

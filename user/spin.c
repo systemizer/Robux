@@ -8,14 +8,14 @@ umain(int argc, char **argv)
 {
 	envid_t env;
 
-	cprintf("I am the parent.  Forking the child...\n");
+	printf("I am the parent.  Forking the child...\n");
 	if ((env = fork()) == 0) {
-		cprintf("I am the child.  Spinning...\n");
+		printf("I am the child.  Spinning...\n");
 		while (1)
 			/* do nothing */;
 	}
 
-	cprintf("I am the parent.  Running the child...\n");
+	printf("I am the parent.  Running the child...\n");
 	sys_yield();
 	sys_yield();
 	sys_yield();
@@ -25,7 +25,7 @@ umain(int argc, char **argv)
 	sys_yield();
 	sys_yield();
 
-	cprintf("I am the parent.  Killing the child...\n");
+	printf("I am the parent.  Killing the child...\n");
 	sys_env_destroy(env);
 }
 

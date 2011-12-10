@@ -8,7 +8,7 @@ umain(int argc, char **argv)
 	struct Fd *fd;
 	const volatile struct Env *kid;
 
-	cprintf("testing for dup race...\n");
+	printf("testing for dup race...\n");
 	if ((r = pipe(p)) < 0)
 		panic("pipe: %e", r);
 	max = 200;
@@ -36,7 +36,7 @@ umain(int argc, char **argv)
 		//
 		for (i=0; i<max; i++) {
 			if(pipeisclosed(p[0])){
-				cprintf("RACE: pipe appears closed\n");
+				printf("RACE: pipe appears closed\n");
 				exit();
 			}
 			sys_yield();
@@ -45,22 +45,22 @@ umain(int argc, char **argv)
 		ipc_recv(0,0,0);
 	}
 	pid = r;
-	cprintf("pid is %d\n", pid);
+	printf("pid is %d\n", pid);
 	va = 0;
 	kid = &envs[ENVX(pid)];
-	cprintf("kid is %d\n", kid-envs);
+	printf("kid is %d\n", kid-envs);
 	dup(p[0], 10);
 	while (kid->env_status == ENV_RUNNABLE)
 		dup(p[0], 10);
 
-	cprintf("child done with loop\n");
+	printf("child done with loop\n");
 	if (pipeisclosed(p[0]))
 		panic("somehow the other end of p[0] got closed!");
 	if ((r = fd_lookup(p[0], &fd)) < 0)
 		panic("cannot look up p[0]: %e", r);
 	va = fd2data(fd);
 	if (pageref(va) != 3+1)
-		cprintf("\nchild detected race\n");
+		printf("\nchild detected race\n");
 	else
-		cprintf("\nrace didn't happen\n", max);
+		printf("\nrace didn't happen\n", max);
 }

@@ -8,7 +8,7 @@ handler(struct UTrapframe *utf)
 	int r;
 	void *addr = (void*)utf->utf_fault_va;
 
-	cprintf("fault %x\n", addr);
+	printf("fault %x\n", addr);
 	if ((r = sys_page_alloc(0, ROUNDDOWN(addr, PGSIZE),
 				PTE_P|PTE_U|PTE_W)) < 0)
 		panic("allocating at %x in page fault handler: %e", addr, r);
@@ -19,6 +19,6 @@ void
 umain(int argc, char **argv)
 {
 	set_pgfault_handler(handler);
-	cprintf("%s\n", (char*)0xDeadBeef);
-	cprintf("%s\n", (char*)0xCafeBffe);
+	printf("%s\n", (char*)0xDeadBeef);
+	printf("%s\n", (char*)0xCafeBffe);
 }

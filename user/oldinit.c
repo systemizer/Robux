@@ -31,18 +31,18 @@ umain(int argc, char **argv)
 		exit();
 	}
 
-	cprintf("init: running\n");
+	printf("init: running\n");
 
 	want = 0xf989e;
 	if ((x = sum((char*)&data, sizeof data)) != want)
-		cprintf("init: data is not initialized: got sum %08x wanted %08x\n",
+		printf("init: data is not initialized: got sum %08x wanted %08x\n",
 			x, want);
 	else
-		cprintf("init: data seems okay\n");
+		printf("init: data seems okay\n");
 	if ((x = sum(bss, sizeof bss)) != 0)
-		cprintf("bss is not initialized: wanted sum 0 got %08x\n", x);
+		printf("bss is not initialized: wanted sum 0 got %08x\n", x);
 	else
-		cprintf("init: bss seems okay\n");
+		printf("init: bss seems okay\n");
 
 	// output in one syscall per line to avoid output interleaving 
 	strcat(args, "init: args:");
@@ -51,9 +51,9 @@ umain(int argc, char **argv)
 		strcat(args, argv[i]);
 		strcat(args, "'");
 	}
-	cprintf("%s\n", args);
+	printf("%s\n", args);
 
-	cprintf("init: running sh\n");
+	printf("init: running sh\n");
 
 	// being run directly from kernel, so no file descriptors open yet
 	close(0);
@@ -64,10 +64,10 @@ umain(int argc, char **argv)
 	if ((r = dup(0, 1)) < 0)
 		panic("dup: %e", r);
 	while (1) {
-		cprintf("init: starting sh\n");
+		printf("init: starting sh\n");
 		r = spawnl("/oldsh", "sh", "-i", (char*)0);
 		if (r < 0) {
-			cprintf("init: spawn sh: %e\n", r);
+			printf("init: spawn sh: %e\n", r);
 			continue;
 		}
 		wait(r);

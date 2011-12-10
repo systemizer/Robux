@@ -14,10 +14,10 @@ umain(int argc, char **argv)
 	if (thisenv == &envs[1]) {
 		while (1) {
 			ipc_recv(&who, 0, 0);
-			cprintf("%x recv from %x\n", id, who);
+			printf("%x recv from %x\n", id, who);
 		}
 	} else {
-		cprintf("%x loop sending to %x\n", id, envs[1].env_id);
+		printf("%x loop sending to %x\n", id, envs[1].env_id);
 		while (1)
 			ipc_send(envs[1].env_id, 0, 0, 0);
 	}

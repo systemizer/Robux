@@ -12,10 +12,10 @@ umain(int argc, char *argv[])
 	
 	int r = get_user_by_id(uid, &info);
 	if(r < 0)
-		cprintf("Failed to get user for id %d: %e\n", uid, r);
+		printf("Failed to get user for id %d: %e\n", uid, r);
 	else
 	{
-		cprintf("%s\n", info.ui_name);
+		printf("%s\n", info.ui_name);
 	}
 
 	exit();

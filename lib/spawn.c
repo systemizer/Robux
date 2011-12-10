@@ -117,12 +117,12 @@ spawn_full(const char *prog, const char **argv, uid_t uid, gid_t gid)
 
 	if(uid)
 	{
-		if((r = sys_set_user_id(r, uid)) < 0)
+		if((r = sys_set_user_id(child, uid)) < 0)
 			goto error;
 	}
 	if(gid)
 	{
-		if((r = sys_set_group_id(r, gid)) < 0)
+		if((r = sys_set_group_id(child, gid)) < 0)
 			goto error;
 	}
 
